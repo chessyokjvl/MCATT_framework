@@ -3,350 +3,230 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MCATT Command Center</title>
+    <title>Data-Driven MCATT</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Sarabun', sans-serif; background-color: #f3f4f6; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    </style>
 </head>
-<body class="text-gray-800 h-screen flex overflow-hidden">
+<body class="bg-gray-100 flex flex-col h-screen overflow-hidden text-gray-800">
 
-    <nav class="bg-indigo-900 text-white w-64 flex-shrink-0 hidden md:flex flex-col">
-        <div class="p-4 bg-indigo-950 shadow-md">
-            <h1 class="text-xl font-bold tracking-wide"><i class="fa-solid fa-truck-medical mr-2"></i>MCATT OS</h1>
-            <p class="text-xs text-indigo-300 mt-1">ระบบปฏิบัติการเยียวยาจิตใจ</p>
+    <div id="login-overlay" class="fixed inset-0 bg-indigo-900 z-50 flex flex-col items-center justify-center text-white">
+        <i class="fa-solid fa-shield-halved text-5xl mb-4"></i>
+        <h1 class="text-2xl font-bold mb-6">MCATT Security Gateway</h1>
+        <div class="bg-white text-gray-800 p-6 rounded-lg shadow-xl w-80">
+            <label class="block text-sm font-bold mb-2">เลือกบทบาทผู้ใช้งาน (RBAC)</label>
+            <select id="user-role" class="w-full p-2 border rounded mb-4">
+                <option value="staff">ผู้ปฏิบัติงาน (Staff - เห็นเฉพาะเคส)</option>
+                <option value="commander">ผู้บัญชาการ (Commander - เห็น Dashboard แบบ Mask ข้อมูล)</option>
+            </select>
+            <button onclick="login()" class="w-full bg-indigo-600 text-white font-bold py-2 rounded hover:bg-indigo-700">เข้าสู่ระบบ</button>
         </div>
-        <div class="flex-1 overflow-y-auto py-4">
-            <button onclick="switchView('dashboard')" class="nav-btn w-full text-left px-6 py-3 hover:bg-indigo-800 border-l-4 border-indigo-400 bg-indigo-800" data-target="dashboard">
-                <i class="fa-solid fa-chart-pie w-6"></i> Dashboard
-            </button>
-            <button onclick="switchView('patients')" class="nav-btn w-full text-left px-6 py-3 hover:bg-indigo-800 border-l-4 border-transparent" data-target="patients">
-                <i class="fa-solid fa-users w-6"></i> 1. ข้อมูลผู้ได้รับผลกระทบ
-            </button>
-            <button onclick="switchView('staff')" class="nav-btn w-full text-left px-6 py-3 hover:bg-indigo-800 border-l-4 border-transparent" data-target="staff">
-                <i class="fa-solid fa-user-doctor w-6"></i> 2. ปฏิบัติการบุคลากร
-            </button>
-            <button onclick="switchView('stockpile')" class="nav-btn w-full text-left px-6 py-3 hover:bg-indigo-800 border-l-4 border-transparent" data-target="stockpile">
-                <i class="fa-solid fa-boxes-stacked w-6"></i> 3. ระบบ Stockpiling
-            </button>
-            <button onclick="switchView('aar')" class="nav-btn w-full text-left px-6 py-3 hover:bg-indigo-800 border-l-4 border-transparent" data-target="aar">
-                <i class="fa-solid fa-magnifying-glass-chart w-6"></i> 4. ทบทวน AAR / RCA
-            </button>
-            <button onclick="switchView('network')" class="nav-btn w-full text-left px-6 py-3 hover:bg-indigo-800 border-l-4 border-transparent" data-target="network">
-                <i class="fa-solid fa-handshake w-6"></i> 5. เครือข่ายความร่วมมือ
-            </button>
-        </div>
-    </nav>
-
-    <div class="md:hidden bg-indigo-900 text-white p-4 flex justify-between items-center fixed top-0 w-full z-10 shadow-md">
-        <h1 class="text-lg font-bold"><i class="fa-solid fa-truck-medical mr-2"></i>MCATT OS</h1>
-        <button onclick="document.getElementById('mobile-menu').classList.toggle('hidden')" class="text-white focus:outline-none">
-            <i class="fa-solid fa-bars text-xl"></i>
-        </button>
     </div>
 
-    <div id="mobile-menu" class="hidden md:hidden fixed top-14 w-full bg-indigo-800 text-white z-10 shadow-lg">
-        <button onclick="switchView('dashboard'); document.getElementById('mobile-menu').classList.add('hidden')" class="w-full text-left px-4 py-3 border-b border-indigo-700">Dashboard</button>
-        <button onclick="switchView('patients'); document.getElementById('mobile-menu').classList.add('hidden')" class="w-full text-left px-4 py-3 border-b border-indigo-700">1. ข้อมูลผู้ได้รับผลกระทบ</button>
-        <button onclick="switchView('staff'); document.getElementById('mobile-menu').classList.add('hidden')" class="w-full text-left px-4 py-3 border-b border-indigo-700">2. ปฏิบัติการบุคลากร</button>
-        <button onclick="switchView('stockpile'); document.getElementById('mobile-menu').classList.add('hidden')" class="w-full text-left px-4 py-3 border-b border-indigo-700">3. ระบบ Stockpiling</button>
-        <button onclick="switchView('aar'); document.getElementById('mobile-menu').classList.add('hidden')" class="w-full text-left px-4 py-3 border-b border-indigo-700">4. ทบทวน AAR / RCA</button>
-        <button onclick="switchView('network'); document.getElementById('mobile-menu').classList.add('hidden')" class="w-full text-left px-4 py-3">5. เครือข่ายความร่วมมือ</button>
-    </div>
+    <div class="flex h-full">
+        <nav class="bg-indigo-900 text-white w-64 hidden md:flex flex-col">
+            <div class="p-4 bg-indigo-950 font-bold text-lg"><i class="fa-solid fa-truck-medical mr-2"></i>MCATT OS</div>
+            <div class="flex-1 p-2 space-y-1">
+                <button onclick="switchView('dashboard')" class="w-full text-left p-3 rounded hover:bg-indigo-800 focus:bg-indigo-800"><i class="fa-solid fa-chart-pie mr-2"></i> Dashboard</button>
+                <button onclick="switchView('patients')" class="w-full text-left p-3 rounded hover:bg-indigo-800"><i class="fa-solid fa-user-plus mr-2"></i> 1. ทะเบียนผู้รับผลกระทบ</button>
+                <button onclick="switchView('aar')" class="w-full text-left p-3 rounded hover:bg-indigo-800"><i class="fa-solid fa-magnifying-glass mr-2"></i> 4. ทบทวน RCA / AAR</button>
+                <button onclick="switchView('ai')" class="w-full text-left p-3 rounded hover:bg-indigo-800 text-amber-300"><i class="fa-solid fa-robot mr-2"></i> ระบบ AI Support (RAG)</button>
+            </div>
+            <div class="p-4 text-xs text-indigo-300">Role: <span id="display-role">...</span></div>
+        </nav>
 
-    <main class="flex-1 flex flex-col h-screen overflow-hidden pt-14 md:pt-0">
-        <header class="bg-white shadow-sm p-4 flex justify-between items-center z-0">
-            <h2 id="page-title" class="text-xl font-semibold text-gray-700">Interactive Dashboard</h2>
-            <div id="alert-box" class="hidden px-4 py-2 rounded text-sm font-bold shadow-sm transition-all duration-300"></div>
-        </header>
+        <main class="flex-1 overflow-y-auto p-4 md:p-6 pb-20 relative">
+            <div id="alert-box" class="hidden absolute top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-40 font-bold"></div>
 
-        <div class="flex-1 overflow-y-auto p-4 md:p-6 pb-20 md:pb-6">
-            
-            <div id="view-dashboard" class="tab-content active">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <div class="bg-white p-4 rounded-lg shadow border-l-4 border-red-500">
-                        <p class="text-xs text-gray-500 font-semibold">กลุ่มวิกฤต (แดง)</p>
-                        <p class="text-2xl font-bold text-gray-800 mt-1">24 <span class="text-sm text-red-500"><i class="fa-solid fa-arrow-up"></i></span></p>
-                    </div>
-                    <div class="bg-white p-4 rounded-lg shadow border-l-4 border-yellow-500">
-                        <p class="text-xs text-gray-500 font-semibold">กลุ่มเสี่ยง (เหลือง)</p>
-                        <p class="text-2xl font-bold text-gray-800 mt-1">86</p>
-                    </div>
-                    <div class="bg-white p-4 rounded-lg shadow border-l-4 border-emerald-500">
-                        <p class="text-xs text-gray-500 font-semibold">ทีมปฏิบัติงาน Active</p>
-                        <p class="text-2xl font-bold text-gray-800 mt-1">12 ทีม</p>
-                    </div>
-                    <div class="bg-white p-4 rounded-lg shadow border-l-4 border-blue-500">
-                        <p class="text-xs text-gray-500 font-semibold">สถานะภารกิจ</p>
-                        <p class="text-2xl font-bold text-gray-800 mt-1">กำลังดำเนินการ</p>
-                    </div>
+            <div id="view-dashboard" class="hidden">
+                <h2 class="text-xl font-bold mb-4">Command Center Dashboard</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-white p-4 rounded shadow border-l-4 border-red-500">วิกฤต (แดง) <br><span class="text-2xl font-bold">12</span></div>
+                    <div class="bg-white p-4 rounded shadow border-l-4 border-yellow-500">เสี่ยง (เหลือง) <br><span class="text-2xl font-bold">45</span></div>
+                    <div class="bg-white p-4 rounded shadow border-l-4 border-green-500">ทีม Active <br><span class="text-2xl font-bold">8</span></div>
                 </div>
+                
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="bg-white p-4 rounded-lg shadow">
-                        <h3 class="text-sm font-semibold text-gray-700 mb-4">สัดส่วนผู้รับผลกระทบตามความรุนแรง (Triage)</h3>
-                        <div class="h-64"><canvas id="triageChart"></canvas></div>
+                    <div class="bg-white p-4 rounded shadow h-80 flex flex-col">
+                        <h3 class="font-bold mb-2"><i class="fa-solid fa-map-location-dot"></i> Geospatial Mapping</h3>
+                        <div id="map" class="flex-1 rounded border"></div>
                     </div>
-                    <div class="bg-white p-4 rounded-lg shadow">
-                        <h3 class="text-sm font-semibold text-gray-700 mb-4">แนวโน้มการพบเคสเสี่ยงสะสม</h3>
-                        <div class="h-64"><canvas id="trendChart"></canvas></div>
+                    <div class="bg-white p-4 rounded shadow h-80">
+                        <h3 class="font-bold mb-2">สถานะ Triage ล่าสุด</h3>
+                        <canvas id="triageChart"></canvas>
                     </div>
                 </div>
             </div>
 
-            <div id="view-patients" class="tab-content">
-                <form onsubmit="handleSubmit(event, 'Patients', 'CID')" class="bg-white rounded-lg shadow-md overflow-hidden">
-                    <div class="bg-indigo-50 border-b border-indigo-100 p-4">
-                        <h3 class="font-bold text-indigo-800"><i class="fa-solid fa-id-card mr-2"></i>ลงทะเบียนและประเมินผู้รับผลกระทบแบบละเอียด</h3>
-                    </div>
-                    <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="md:col-span-3 pb-2 border-b border-gray-200">
-                            <h4 class="text-sm font-semibold text-gray-600 mb-3">ส่วนที่ 1: ข้อมูลการระบุตัวตน (Primary Data)</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div><label class="block text-xs font-medium mb-1">เลขบัตรประชาชน (CID)*</label><input type="text" name="CID" required maxlength="13" class="w-full p-2 border rounded text-sm bg-yellow-50 focus:ring-2 focus:ring-indigo-400 focus:outline-none"></div>
-                                <div><label class="block text-xs font-medium mb-1">ชื่อ-นามสกุล*</label><input type="text" name="FullName" required class="w-full p-2 border rounded text-sm focus:ring-2 focus:ring-indigo-400 focus:outline-none"></div>
-                                <div><label class="block text-xs font-medium mb-1">เบอร์โทรศัพท์ติดต่อ</label><input type="text" name="Phone" class="w-full p-2 border rounded text-sm focus:ring-2 focus:ring-indigo-400 focus:outline-none"></div>
+            <div id="view-patients" class="hidden">
+                <form onsubmit="handleSubmit(event, 'Patients', 'CID')" class="bg-white p-6 rounded shadow max-w-4xl mx-auto">
+                    <h2 class="text-lg font-bold mb-4 border-b pb-2">ลงทะเบียนประเมินเคส</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label class="block text-xs font-bold mb-1">CID 13 หลัก</label><input type="text" name="CID" id="input-cid" required class="w-full p-2 border rounded"></div>
+                        <div><label class="block text-xs font-bold mb-1">ระดับ Triage</label>
+                            <select name="Severity" class="w-full p-2 border rounded text-red-600 font-bold bg-red-50">
+                                <option value="แดง">แดง (วิกฤต / ฉุกเฉิน)</option>
+                                <option value="เหลือง" class="text-yellow-600">เหลือง (เสี่ยง)</option>
+                                <option value="เขียว" class="text-green-600">เขียว (เฝ้าระวัง)</option>
+                            </select>
+                        </div>
+                        <div><label class="block text-xs font-bold mb-1">พิกัด (Lat,Lng)</label>
+                            <div class="flex gap-2">
+                                <input type="text" name="Coords" id="coords" placeholder="เช่น 17.89, 101.72" class="w-full p-2 border rounded">
+                                <button type="button" onclick="getLocation()" class="bg-blue-500 text-white px-2 rounded"><i class="fa-solid fa-location-crosshairs"></i></button>
                             </div>
                         </div>
-
-                        <div class="md:col-span-3 pb-2 border-b border-gray-200">
-                            <h4 class="text-sm font-semibold text-gray-600 mb-3">ส่วนที่ 2: ความเชื่อมโยงและพื้นที่ (Spatial & Linkage)</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div><label class="block text-xs font-medium mb-1">ประเภทผู้ได้รับผลกระทบ</label>
-                                    <select name="Type" class="w-full p-2 border rounded text-sm"><option>ผู้ประสบเหตุโดยตรง</option><option>ครอบครัว/ญาติ</option><option>ผู้พบเห็นเหตุการณ์</option><option>บุคลากรทางการแพทย์</option></select>
-                                </div>
-                                <div><label class="block text-xs font-medium mb-1">เชื่อมโยงกับ CID บุคคลอื่น (ถ้ามี)</label><input type="text" name="Linked_CID" placeholder="ระบุ CID ญาติเพื่อลิงก์ข้อมูล" class="w-full p-2 border rounded text-sm"></div>
-                                <div><label class="block text-xs font-medium mb-1">พิกัด / สถานที่พักพิงปัจจุบัน</label><input type="text" name="Location" placeholder="เช่น ศูนย์อพยพ อบต., หมู่บ้าน..." class="w-full p-2 border rounded text-sm"></div>
-                            </div>
-                        </div>
-
-                        <div class="md:col-span-3">
-                            <h4 class="text-sm font-semibold text-gray-600 mb-3">ส่วนที่ 3: สถานะความรุนแรงและการจัดการ (Triage & Intervention)</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div><label class="block text-xs font-medium mb-1">ระดับ Triage ปัจจุบัน</label>
-                                    <select name="Severity" class="w-full p-2 border rounded text-sm font-bold">
-                                        <option value="เขียว" class="text-green-600">เขียว (เครียดระดับปกติ - เฝ้าระวัง)</option>
-                                        <option value="เหลือง" class="text-yellow-600">เหลือง (เสี่ยง - ต้องให้การปรึกษา)</option>
-                                        <option value="แดง" class="text-red-600">แดง (วิกฤต/ฉุกเฉิน - ส่งต่อจิตแพทย์)</option>
-                                    </select>
-                                </div>
-                                <div><label class="block text-xs font-medium mb-1">สถานะการดูแล</label>
-                                    <select name="Status" class="w-full p-2 border rounded text-sm"><option>รอรับการประเมิน</option><option>กำลังให้การปฐมพยาบาลทางใจ (PFA)</option><option>ส่งต่อ รพ. (Refer)</option><option>ติดตามผล (Follow-up)</option><option>ปิดเคส (Closed)</option></select>
-                                </div>
-                                <div><label class="block text-xs font-medium mb-1">การประเมินความเสี่ยงเฉพาะ (ถ้ามี)</label>
-                                    <input type="text" name="Specific_Risk" placeholder="เช่น เสี่ยงฆ่าตัวตาย, ก้าวร้าว" class="w-full p-2 border rounded text-sm">
-                                </div>
-                                <div class="md:col-span-3"><label class="block text-xs font-medium mb-1">บันทึกติดตามการเยียวยา (Progress Note)</label>
-                                    <textarea name="Progress_Note" rows="3" placeholder="บันทึกอาการเบื้องต้น หรือแผนการดูแลต่อเนื่อง" class="w-full p-2 border rounded text-sm"></textarea>
-                                </div>
-                            </div>
-                        </div>
+                        <div><label class="block text-xs font-bold mb-1">อาการสำคัญ</label><input type="text" name="Progress_Note" class="w-full p-2 border rounded"></div>
                     </div>
-                    <div class="bg-gray-50 p-4 text-right border-t border-gray-200">
-                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded shadow-md font-semibold text-sm transition-colors"><i class="fa-solid fa-save mr-2"></i>บันทึก / อัปเดตข้อมูล (Upsert)</button>
-                    </div>
+                    <button type="submit" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded font-bold w-full">บันทึกข้อมูล</button>
                 </form>
             </div>
 
-            <div id="view-staff" class="tab-content">
-                <form onsubmit="handleSubmit(event, 'Staff', 'Staff_ID')" class="bg-white rounded-lg shadow-md overflow-hidden">
-                    <div class="bg-emerald-50 border-b border-emerald-100 p-4">
-                        <h3 class="font-bold text-emerald-800"><i class="fa-solid fa-calendar-check mr-2"></i>ลงทะเบียนและจ่ายงานบุคลากร (Staff Assignment)</h3>
-                    </div>
-                    <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label class="block text-xs font-medium mb-1">รหัสเจ้าหน้าที่*</label><input type="text" name="Staff_ID" required class="w-full p-2 border rounded text-sm"></div>
-                        <div><label class="block text-xs font-medium mb-1">ชื่อ-นามสกุล และวิชาชีพ*</label><input type="text" name="Staff_Name" placeholder="เช่น นาย A (นักจิตวิทยา)" required class="w-full p-2 border rounded text-sm"></div>
-                        <div><label class="block text-xs font-medium mb-1">ทีมรับผิดชอบ (Group Assignment)</label>
-                            <select name="Team" class="w-full p-2 border rounded text-sm"><option>ทีมคัดกรอง (Triage)</option><option>ทีมเยียวยา (Intervention)</option><option>ทีมประเมินเชิงลึก</option><option>ทีมสนับสนุน/ลงข้อมูล</option></select>
+            <div id="view-aar" class="hidden">
+                 <form onsubmit="handleSubmit(event, 'AAR', 'AAR_ID')" class="bg-white p-6 rounded shadow max-w-4xl mx-auto">
+                    <h2 class="text-lg font-bold mb-4 border-b pb-2">แบบบันทึก RCA ตามโมเดล 2-Axis Swiss Cheese</h2>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div><label class="block text-xs font-bold mb-1">รหัสการทบทวน</label><input type="text" name="AAR_ID" placeholder="AAR-001" required class="w-full p-2 border rounded"></div>
+                        <div class="p-3 bg-red-50 border border-red-200 rounded">
+                            <label class="block text-sm font-bold text-red-700 mb-1">1. Active Failure (ความผิดพลาดระดับบุคคล/หน้างาน)</label>
+                            <p class="text-xs text-gray-500 mb-2">ข้อผิดพลาดในการตัดสินใจ, การสื่อสาร, การไม่ปฏิบัติตาม Protocol</p>
+                            <textarea name="Active_Failure" rows="2" class="w-full p-2 border rounded"></textarea>
                         </div>
-                        <div><label class="block text-xs font-medium mb-1">กำหนดการปฏิบัติงาน (Shift/Date)</label><input type="text" name="Shift" placeholder="เช่น 26 พ.ค. 2569 (ผลัดเช้า)" class="w-full p-2 border rounded text-sm"></div>
-                        <div class="md:col-span-2"><label class="block text-xs font-medium mb-1">พื้นที่ปฏิบัติการที่ได้รับมอบหมาย</label><input type="text" name="Assigned_Location" placeholder="เช่น ประจำจุดพักพิงที่ 1" class="w-full p-2 border rounded text-sm"></div>
+                        <div class="p-3 bg-orange-50 border border-orange-200 rounded">
+                            <label class="block text-sm font-bold text-orange-700 mb-1">2. Latent Condition (ปัจจัยซ่อนเร้นระดับระบบ/องค์กร)</label>
+                            <p class="text-xs text-gray-500 mb-2">อัตรากำลังไม่พอ, วัฒนธรรมองค์กร, อุปกรณ์ไม่พร้อม, โครงสร้างระบบ</p>
+                            <textarea name="Latent_Condition" rows="2" class="w-full p-2 border rounded"></textarea>
+                        </div>
                     </div>
-                    <div class="bg-gray-50 p-4 text-right border-t border-gray-200">
-                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded shadow-md font-semibold text-sm transition-colors"><i class="fa-solid fa-save mr-2"></i>บันทึกการจ่ายงาน</button>
-                    </div>
+                    <button type="submit" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded font-bold w-full">จัดเก็บข้อมูล RCA เพื่อทำ QI</button>
                 </form>
             </div>
 
-            <div id="view-stockpile" class="tab-content">
-                <form onsubmit="handleSubmit(event, 'Stockpile', 'Item_Code')" class="bg-white rounded-lg shadow-md overflow-hidden">
-                    <div class="bg-amber-50 border-b border-amber-100 p-4">
-                        <h3 class="font-bold text-amber-800"><i class="fa-solid fa-box-open mr-2"></i>ระบบบริหาร Stockpiling และข้อมูลสนับสนุน</h3>
+            <div id="view-ai" class="hidden h-full flex flex-col">
+                <div class="bg-gradient-to-r from-indigo-900 to-purple-800 text-white p-6 rounded-t shadow">
+                    <h2 class="text-xl font-bold"><i class="fa-solid fa-brain"></i> MCATT Clinical AI Assistant (RAG)</h2>
+                    <p class="text-sm text-indigo-200">ระบบเชื่อมโยงฐานข้อมูลแนวทางการเยียวยาจิตใจและยาจิตเวช</p>
+                </div>
+                <div class="bg-white flex-1 p-4 border flex flex-col rounded-b shadow mb-4 min-h-[300px]">
+                    <div id="chat-history" class="flex-1 overflow-y-auto mb-4 text-sm space-y-4">
+                        <div class="bg-gray-100 p-3 rounded-lg max-w-[80%]">
+                            <b>AI:</b> สวัสดีครับ คุณสามารถสอบถามแนวทางการปฐมพยาบาลทางใจ (PFA) สำหรับเด็ก หรือค้นหาข้อมูลประวัติการใช้ทรัพยากรเก่า (Historical Data) จากฐานข้อมูลได้เลยครับ
+                        </div>
                     </div>
-                    <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label class="block text-xs font-medium mb-1">รหัสรายการ*</label><input type="text" name="Item_Code" required class="w-full p-2 border rounded text-sm"></div>
-                        <div><label class="block text-xs font-medium mb-1">ชื่อข้อมูลสนับสนุน / สื่อ / เวชภัณฑ์*</label><input type="text" name="Item_Name" required class="w-full p-2 border rounded text-sm"></div>
-                        <div><label class="block text-xs font-medium mb-1">หมวดหมู่</label><select name="Category" class="w-full p-2 border rounded text-sm"><option>แบบประเมินกระดาษ</option><option>สื่อให้ความรู้ (InfoGraphic)</option><option>ยา/เวชภัณฑ์</option><option>อุปกรณ์สำนักงาน</option></select></div>
-                        <div><label class="block text-xs font-medium mb-1">จำนวนคงเหลือ / สถานะ</label><input type="text" name="Quantity_Status" placeholder="เช่น 500 แผ่น หรือ ลิงก์ Drive" class="w-full p-2 border rounded text-sm"></div>
+                    <div class="flex gap-2">
+                        <input type="text" id="ai-input" placeholder="พิมพ์คำถาม เช่น แนวทางจัดการผู้ป่วยก้าวร้าว..." class="flex-1 p-2 border rounded">
+                        <button onclick="simulateAI()" class="bg-purple-600 text-white px-4 py-2 rounded font-bold"><i class="fa-solid fa-paper-plane"></i></button>
                     </div>
-                    <div class="bg-gray-50 p-4 text-right border-t border-gray-200">
-                        <button type="submit" class="bg-amber-600 hover:bg-amber-700 text-white px-6 py-2 rounded shadow-md font-semibold text-sm transition-colors"><i class="fa-solid fa-save mr-2"></i>อัปเดตทรัพยากร</button>
-                    </div>
-                </form>
+                </div>
             </div>
 
-            <div id="view-aar" class="tab-content">
-                <form onsubmit="handleSubmit(event, 'AAR', 'AAR_ID')" class="bg-white rounded-lg shadow-md overflow-hidden">
-                    <div class="bg-rose-50 border-b border-rose-100 p-4">
-                        <h3 class="font-bold text-rose-800"><i class="fa-solid fa-layer-group mr-2"></i>บันทึกทบทวน AAR และวิเคราะห์ RCA</h3>
-                    </div>
-                    <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label class="block text-xs font-medium mb-1">รหัสเหตุการณ์*</label><input type="text" name="AAR_ID" required placeholder="เช่น AAR-2026-01" class="w-full p-2 border rounded text-sm bg-rose-50"></div>
-                        <div><label class="block text-xs font-medium mb-1">ชื่อกระบวนการ / สถานการณ์ที่นำมาทบทวน*</label><input type="text" name="Event_Name" required class="w-full p-2 border rounded text-sm"></div>
-                        
-                        <div class="md:col-span-2 border-t border-gray-200 pt-4 mt-2">
-                            <h4 class="text-sm font-semibold text-gray-700 mb-2">การวิเคราะห์สาเหตุ (Root Cause Analysis Matrix)</h4>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium mb-1 text-red-600">ความล้มเหลวเชิงบุคคล (Active Failures / Human Error)</label>
-                            <textarea name="Active_Failure" rows="2" placeholder="เช่น การสื่อสารผิดพลาด, ความเหนื่อยล้าของบุคลากร" class="w-full p-2 border rounded text-sm"></textarea>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium mb-1 text-red-600">ความล้มเหลวเชิงระบบ (Latent Conditions / System Error)</label>
-                            <textarea name="Latent_Condition" rows="2" placeholder="เช่น ขาดแคลนอุปกรณ์, โครงสร้างพื้นที่ไม่เอื้ออำนวย" class="w-full p-2 border rounded text-sm"></textarea>
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-xs font-medium mb-1">โอกาสพัฒนาและมาตรการป้องกัน (Improvement Plan)</label>
-                            <textarea name="Improvement_Plan" rows="2" placeholder="มาตรการเพื่อปิดช่องโหว่ของระบบ" class="w-full p-2 border rounded text-sm"></textarea>
-                        </div>
-                    </div>
-                    <div class="bg-gray-50 p-4 text-right border-t border-gray-200">
-                        <button type="submit" class="bg-rose-600 hover:bg-rose-700 text-white px-6 py-2 rounded shadow-md font-semibold text-sm transition-colors"><i class="fa-solid fa-save mr-2"></i>บันทึกผลการวิเคราะห์</button>
-                    </div>
-                </form>
-            </div>
-
-            <div id="view-network" class="tab-content">
-                <form onsubmit="handleSubmit(event, 'Network', 'Agency_ID')" class="bg-white rounded-lg shadow-md overflow-hidden">
-                    <div class="bg-cyan-50 border-b border-cyan-100 p-4">
-                        <h3 class="font-bold text-cyan-800"><i class="fa-solid fa-handshake-angle mr-2"></i>ทะเบียนเครือข่ายความร่วมมือ (ภายในและภายนอก)</h3>
-                    </div>
-                    <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label class="block text-xs font-medium mb-1">รหัสหน่วยงาน*</label><input type="text" name="Agency_ID" required class="w-full p-2 border rounded text-sm"></div>
-                        <div><label class="block text-xs font-medium mb-1">ชื่อหน่วยงาน / องค์กร*</label><input type="text" name="Agency_Name" required class="w-full p-2 border rounded text-sm"></div>
-                        <div><label class="block text-xs font-medium mb-1">ประเภทองค์กร</label><select name="Agency_Type" class="w-full p-2 border rounded text-sm"><option>หน่วยงานสาธารณสุข</option><option>ฝ่ายปกครอง/ความมั่นคง</option><option>องค์กรอิสระ/มูลนิธิ</option><option>ผู้นำชุมชน</option></select></div>
-                        <div><label class="block text-xs font-medium mb-1">รูปแบบการสนับสนุน (Resource Sharing)</label><input type="text" name="Support_Type" placeholder="เช่น ด้านกำลังคน, ด้านการเงิน, ด้านสถานที่" class="w-full p-2 border rounded text-sm"></div>
-                        <div class="md:col-span-2"><label class="block text-xs font-medium mb-1">ผู้ประสานงานหลัก และข้อมูลติดต่อ 24 ชม.</label><input type="text" name="Contact_Info" class="w-full p-2 border rounded text-sm"></div>
-                    </div>
-                    <div class="bg-gray-50 p-4 text-right border-t border-gray-200">
-                        <button type="submit" class="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-2 rounded shadow-md font-semibold text-sm transition-colors"><i class="fa-solid fa-save mr-2"></i>อัปเดตฐานข้อมูลเครือข่าย</button>
-                    </div>
-                </form>
-            </div>
-
-        </div>
-    </main>
+        </main>
+    </div>
 
     <script src="config.js"></script>
     <script>
-        // ระบบ Navigation
-        const pageTitles = {
-            'dashboard': 'Interactive Dashboard',
-            'patients': '1. ข้อมูลผู้ได้รับผลกระทบ',
-            'staff': '2. ระบบปฏิบัติการบุคลากร',
-            'stockpile': '3. ระบบ Stockpiling',
-            'aar': '4. ทบทวน AAR / วิเคราะห์ RCA',
-            'network': '5. เครือข่ายความร่วมมือ'
-        };
+        let currentUserRole = 'staff';
+        let mapInitialized = false;
 
-        function switchView(viewId) {
-            // สลับ Content
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.getElementById(`view-${viewId}`).classList.add('active');
+        // Login & RBAC Control
+        function login() {
+            currentUserRole = document.getElementById('user-role').value;
+            document.getElementById('display-role').innerText = currentUserRole.toUpperCase();
+            document.getElementById('login-overlay').style.display = 'none';
             
-            // เปลี่ยน Title
-            document.getElementById('page-title').innerText = pageTitles[viewId];
-
-            // อัปเดตเมนู Sidebar (Active state)
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('border-indigo-400', 'bg-indigo-800');
-                btn.classList.add('border-transparent');
-                if(btn.dataset.target === viewId) {
-                    btn.classList.add('border-indigo-400', 'bg-indigo-800');
-                    btn.classList.remove('border-transparent');
-                }
-            });
-
-            // Refresh Charts ถ้าเข้าหน้า Dashboard
-            if(viewId === 'dashboard' && window.myTriageChart) {
-                window.myTriageChart.update();
-                window.myTrendChart.update();
+            // RBAC Logic เบื้องต้น: ถ้าเป็น Staff จะโดนบังคับไปหน้าลงทะเบียน ไม่ให้ดู Dashboard
+            if(currentUserRole === 'staff') {
+                switchView('patients');
+            } else {
+                switchView('dashboard');
             }
         }
 
-        // ระบบส่งข้อมูล (เชื่อม Google Sheets)
+        // Masking Function สำหรับ Commander Dashboard
+        function displayMaskedData(cid) {
+            if(currentUserRole === 'commander' && cid.length === 13) {
+                return cid.substring(0, 4) + "-XXXXX-" + cid.substring(10, 13);
+            }
+            return cid;
+        }
+
+        function switchView(viewId) {
+            if(currentUserRole === 'staff' && viewId === 'dashboard') {
+                alert('RBAC: ท่านไม่มีสิทธิ์เข้าถึงภาพรวม Command Center');
+                return;
+            }
+
+            document.querySelectorAll('main > div[id^="view-"]').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`view-${viewId}`).classList.remove('hidden');
+
+            if(viewId === 'dashboard' && !mapInitialized) {
+                initDashboard();
+            }
+        }
+
+        // ระบบพิกัดแผนที่ (Geospatial)
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => { document.getElementById('coords').value = `${pos.coords.latitude}, ${pos.coords.longitude}`; },
+                    (err) => { alert("ไม่สามารถดึงพิกัดได้ กรุณาตรวจสอบสิทธิ์"); }
+                );
+            }
+        }
+
+        function initDashboard() {
+            // สร้างแผนที่ Leaflet (Heatmap พื้นฐาน)
+            const map = L.map('map').setView([17.89, 101.72], 12); // ตำแหน่งตั้งต้น
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            L.marker([17.89, 101.72]).addTo(map).bindPopup("<b>โซนวิกฤต</b><br>พบเคสสะสม 12 เคส").openPopup();
+            mapInitialized = true;
+
+            // กราฟ Triage
+            new Chart(document.getElementById('triageChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['แดง (วิกฤต)', 'เหลือง (เสี่ยง)', 'เขียว (เฝ้าระวัง)'],
+                    datasets: [{ label: 'จำนวนเคส', data: [12, 45, 102], backgroundColor: ['#ef4444', '#eab308', '#22c55e'] }]
+                }
+            });
+        }
+
+        // ระบบจำลอง AI
+        function simulateAI() {
+            const input = document.getElementById('ai-input').value;
+            if(!input) return;
+            const history = document.getElementById('chat-history');
+            history.innerHTML += `<div class="bg-purple-100 p-3 rounded-lg max-w-[80%] ml-auto text-right"><b>You:</b> ${input}</div>`;
+            document.getElementById('ai-input').value = '';
+            
+            setTimeout(() => {
+                history.innerHTML += `<div class="bg-gray-100 p-3 rounded-lg max-w-[80%]"><b>AI:</b> ค้นพบแนวทางจากระบบ RAG: สำหรับกรณีที่พบผู้ป่วยก้าวร้าว (อ้างอิงข้อมูลปี 2568) โปรดประสานทีมรักษาความปลอดภัยเพื่อประเมินความปลอดภัยของสถานที่เกิดเหตุ (Scene Safety) และพิจารณาให้ Diazepam หรือ Haloperidol ตามโปรโตคอลการแพทย์ฉุกเฉินครับ</div>`;
+                history.scrollTop = history.scrollHeight;
+            }, 1000);
+        }
+
         async function handleSubmit(event, sheetName, primaryKey) {
             event.preventDefault();
             const form = event.target;
-            const formData = new FormData(form);
             const dataObj = {};
-            formData.forEach((value, key) => { dataObj[key] = value.trim(); });
+            new FormData(form).forEach((value, key) => { dataObj[key] = value.trim(); });
             dataObj['Timestamp'] = new Date().toLocaleString('th-TH');
 
             const payload = { action: "upsert", sheet: sheetName, primaryKey: primaryKey, data: dataObj };
             
-            showAlert('กำลังซิงค์ข้อมูลกับฐานข้อมูลกลาง...', 'bg-blue-100 text-blue-700');
-
             try {
-                // หากต้องการทดสอบ UI โดยไม่ต้องรอ Google Sheet ให้ Comment block นี้ออกชั่วคราว
-                const response = await fetch(CONFIG.API_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                showAlert('บันทึกข้อมูลและอัปเดต Relational Data เรียบร้อยแล้ว!', 'bg-green-100 text-green-800');
+                // หากเชื่อมต่อจริง ใช้ URL จาก CONFIG.API_URL
+                // const response = await fetch(CONFIG.API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+                
+                const box = document.getElementById('alert-box');
+                box.innerText = "บันทึกและตรวจสอบ Trigger แจ้งเตือนเรียบร้อย";
+                box.classList.remove('hidden');
+                setTimeout(() => box.classList.add('hidden'), 3000);
                 form.reset();
-            } catch (error) {
-                showAlert(`ออฟไลน์: บันทึกข้อมูลลงแคชของอุปกรณ์แล้ว (${error.message})`, 'bg-yellow-100 text-yellow-800');
-            }
+            } catch (err) { alert(err.message); }
         }
-
-        function showAlert(msg, classes) {
-            const box = document.getElementById('alert-box');
-            box.className = `block px-4 py-2 rounded text-sm font-bold shadow-sm transition-all duration-300 ${classes}`;
-            box.innerHTML = `<i class="fa-solid fa-circle-info mr-2"></i> ${msg}`;
-            setTimeout(() => { box.classList.add('hidden'); }, 4000);
-        }
-
-        // สร้าง Interactive Dashboard ด้วย Chart.js
-        document.addEventListener('DOMContentLoaded', function() {
-            // Chart 1: สัดส่วนผู้ป่วย (Doughnut)
-            const ctx1 = document.getElementById('triageChart').getContext('2d');
-            window.myTriageChart = new Chart(ctx1, {
-                type: 'doughnut',
-                data: {
-                    labels: ['วิกฤต (แดง)', 'เสี่ยง (เหลือง)', 'เฝ้าระวัง (เขียว)'],
-                    datasets: [{
-                        data: [24, 86, 150],
-                        backgroundColor: ['#ef4444', '#eab308', '#22c55e'],
-                        borderWidth: 0
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
-            });
-
-            // Chart 2: แนวโน้มตามเวลา (Bar)
-            const ctx2 = document.getElementById('trendChart').getContext('2d');
-            window.myTrendChart = new Chart(ctx2, {
-                type: 'bar',
-                data: {
-                    labels: ['วันที่ 1', 'วันที่ 2', 'วันที่ 3', 'วันที่ 4', 'วันนี้'],
-                    datasets: [{
-                        label: 'จำนวนผู้เข้ารับการประเมิน (สะสม)',
-                        data: [12, 45, 110, 198, 260],
-                        backgroundColor: '#6366f1',
-                        borderRadius: 4
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-        });
     </script>
 </body>
 </html>
