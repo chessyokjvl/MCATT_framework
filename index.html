@@ -16,21 +16,25 @@
 <body class="bg-gray-100 flex flex-col h-screen overflow-hidden text-gray-800">
 
     <div class="flex h-full">
-        <nav class="bg-indigo-900 text-white w-64 hidden md:flex flex-col flex-shrink-0">
+        <nav class="bg-indigo-900 text-white w-64 hidden md:flex flex-col flex-shrink-0 z-10 shadow-lg">
             <div class="p-4 bg-indigo-950 font-bold text-lg"><i class="fa-solid fa-truck-medical mr-2"></i>MCATT OS</div>
             <div class="flex-1 p-2 space-y-1 overflow-y-auto">
-                <button onclick="switchView('dashboard')" class="w-full text-left p-3 rounded hover:bg-indigo-800 focus:bg-indigo-800"><i class="fa-solid fa-chart-pie mr-2"></i> ภาพรวม Dashboard</button>
-                <button onclick="switchView('patients')" class="w-full text-left p-3 rounded hover:bg-indigo-800"><i class="fa-solid fa-user-plus mr-2"></i> 1. ทะเบียนประเมินผู้รับผลกระทบ</button>
-                <button onclick="switchView('aar')" class="w-full text-left p-3 rounded hover:bg-indigo-800"><i class="fa-solid fa-clipboard-list mr-2"></i> 4. ทบทวนปฏิบัติการ (AAR)</button>
-                <button onclick="switchView('ai')" class="w-full text-left p-3 rounded hover:bg-indigo-800 text-amber-300"><i class="fa-solid fa-robot mr-2"></i> ผู้ช่วย AI Support (RAG)</button>
+                <button onclick="switchView('dashboard')" class="w-full text-left p-3 rounded hover:bg-indigo-800 focus:bg-indigo-800"><i class="fa-solid fa-chart-pie mr-2 w-5"></i> ภาพรวม Dashboard</button>
+                <button onclick="switchView('patients')" class="w-full text-left p-3 rounded hover:bg-indigo-800"><i class="fa-solid fa-user-plus mr-2 w-5"></i> 1. ผู้รับผลกระทบ</button>
+                <button onclick="switchView('staff')" class="w-full text-left p-3 rounded hover:bg-indigo-800"><i class="fa-solid fa-user-doctor mr-2 w-5"></i> 2. ปฏิบัติการบุคลากร</button>
+                <button onclick="switchView('stockpile')" class="w-full text-left p-3 rounded hover:bg-indigo-800"><i class="fa-solid fa-boxes-stacked mr-2 w-5"></i> 3. ระบบ Stockpiling</button>
+                <button onclick="switchView('aar')" class="w-full text-left p-3 rounded hover:bg-indigo-800"><i class="fa-solid fa-clipboard-list mr-2 w-5"></i> 4. ทบทวนภารกิจ (AAR)</button>
+                <button onclick="switchView('network')" class="w-full text-left p-3 rounded hover:bg-indigo-800"><i class="fa-solid fa-handshake mr-2 w-5"></i> 5. เครือข่ายความร่วมมือ</button>
+                <hr class="border-indigo-700 my-2">
+                <button onclick="switchView('ai')" class="w-full text-left p-3 rounded hover:bg-indigo-800 text-amber-300"><i class="fa-solid fa-robot mr-2 w-5"></i> ผู้ช่วย AI Support</button>
             </div>
             <div class="p-4 text-xs text-indigo-300 text-center border-t border-indigo-800">
-                โหมดผู้พัฒนา (รวมทุกสิทธิ์)
+                โหมดผู้พัฒนา (รวมทุกเมนู)
             </div>
         </nav>
 
         <main class="flex-1 overflow-y-auto p-4 md:p-6 relative">
-            <div id="alert-box" class="hidden absolute top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-40 font-bold"></div>
+            <div id="alert-box" class="hidden absolute top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-40 font-bold transition-all"></div>
 
             <div id="view-dashboard" class="block">
                 <h2 class="text-xl font-bold mb-4">Command Center Dashboard</h2>
@@ -56,9 +60,9 @@
 
             <div id="view-patients" class="hidden">
                 <form onsubmit="handleSubmit(event, 'Patients', 'CID')" class="bg-white p-6 rounded shadow max-w-4xl mx-auto">
-                    <h2 class="text-lg font-bold mb-4 border-b pb-2 text-indigo-800"><i class="fa-solid fa-user-plus mr-2"></i>ลงทะเบียนประเมินเคส</h2>
+                    <h2 class="text-lg font-bold mb-4 border-b pb-2 text-indigo-800"><i class="fa-solid fa-user-plus mr-2"></i>1. ลงทะเบียนประเมินเคสผู้รับผลกระทบ</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label class="block text-xs font-bold mb-1">CID 13 หลัก *</label><input type="text" name="CID" id="input-cid" required class="w-full p-2 border rounded"></div>
+                        <div><label class="block text-xs font-bold mb-1">CID 13 หลัก *</label><input type="text" name="CID" required class="w-full p-2 border rounded bg-yellow-50"></div>
                         <div><label class="block text-xs font-bold mb-1">ชื่อ-นามสกุล</label><input type="text" name="FullName" required class="w-full p-2 border rounded"></div>
                         <div><label class="block text-xs font-bold mb-1">ระดับ Triage ปัจจุบัน</label>
                             <select name="Severity" class="w-full p-2 border rounded font-bold">
@@ -73,46 +77,97 @@
                                 <button type="button" onclick="getLocation()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 rounded"><i class="fa-solid fa-location-crosshairs"></i></button>
                             </div>
                         </div>
-                        <div class="md:col-span-2"><label class="block text-xs font-bold mb-1">อาการสำคัญ / ข้อความติดตาม</label><textarea name="Progress_Note" rows="2" class="w-full p-2 border rounded"></textarea></div>
+                        <div class="md:col-span-2"><label class="block text-xs font-bold mb-1">อาการสำคัญ / ข้อความติดตาม (Progress Note)</label><textarea name="Progress_Note" rows="3" class="w-full p-2 border rounded"></textarea></div>
                     </div>
                     <button type="submit" class="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded font-bold w-full">บันทึกข้อมูลผู้ป่วย</button>
                 </form>
             </div>
 
+            <div id="view-staff" class="hidden">
+                <form onsubmit="handleSubmit(event, 'Staff', 'Staff_ID')" class="bg-white p-6 rounded shadow max-w-4xl mx-auto">
+                    <h2 class="text-lg font-bold mb-4 border-b pb-2 text-indigo-800"><i class="fa-solid fa-user-doctor mr-2"></i>2. ระบบปฏิบัติการและจ่ายงานบุคลากร</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label class="block text-xs font-bold mb-1">รหัสเจ้าหน้าที่ *</label><input type="text" name="Staff_ID" required class="w-full p-2 border rounded"></div>
+                        <div><label class="block text-xs font-bold mb-1">ชื่อ-นามสกุล / วิชาชีพ *</label><input type="text" name="Staff_Name" required placeholder="เช่น นายแพทย์ ก (จิตแพทย์)" class="w-full p-2 border rounded"></div>
+                        <div><label class="block text-xs font-bold mb-1">ทีมรับผิดชอบ (Team Role)</label>
+                            <select name="Team" class="w-full p-2 border rounded">
+                                <option value="ทีมคัดกรอง">ทีมคัดกรอง (Triage)</option>
+                                <option value="ทีมเยียวยา">ทีมเยียวยา (Intervention)</option>
+                                <option value="ทีมประเมินเชิงลึก">ทีมประเมินเชิงลึก (Assessment)</option>
+                            </select>
+                        </div>
+                        <div><label class="block text-xs font-bold mb-1">พื้นที่ปฏิบัติงาน (Location/Shift)</label><input type="text" name="Assignment" placeholder="เช่น ศูนย์พักพิงที่ 1 (ผลัดเช้า)" class="w-full p-2 border rounded"></div>
+                    </div>
+                    <button type="submit" class="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded font-bold w-full">บันทึกการจ่ายงานเจ้าหน้าที่</button>
+                </form>
+            </div>
+
+            <div id="view-stockpile" class="hidden">
+                <form onsubmit="handleSubmit(event, 'Stockpile', 'Item_ID')" class="bg-white p-6 rounded shadow max-w-4xl mx-auto">
+                    <h2 class="text-lg font-bold mb-4 border-b pb-2 text-indigo-800"><i class="fa-solid fa-boxes-stacked mr-2"></i>3. ระบบบริหาร Stockpiling และคลังข้อมูล</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label class="block text-xs font-bold mb-1">รหัสรายการ *</label><input type="text" name="Item_ID" required placeholder="เช่น MAT-001" class="w-full p-2 border rounded"></div>
+                        <div><label class="block text-xs font-bold mb-1">ชื่อสิ่งสนับสนุน / เวชภัณฑ์ / สื่อ *</label><input type="text" name="Item_Name" required class="w-full p-2 border rounded"></div>
+                        <div><label class="block text-xs font-bold mb-1">หมวดหมู่</label>
+                            <select name="Category" class="w-full p-2 border rounded">
+                                <option value="เวชภัณฑ์ยา">เวชภัณฑ์ยา</option>
+                                <option value="แบบประเมิน/เอกสาร">แบบประเมิน/เอกสาร</option>
+                                <option value="สื่อให้ความรู้">สื่อให้ความรู้ (InfoGraphic/ลิงก์)</option>
+                            </select>
+                        </div>
+                        <div><label class="block text-xs font-bold mb-1">จำนวนคงเหลือ / สถานะจัดเก็บ</label><input type="text" name="Status" placeholder="เช่น 500 ชุด หรือ Google Drive Link" class="w-full p-2 border rounded"></div>
+                    </div>
+                    <button type="submit" class="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded font-bold w-full">บันทึกทรัพยากร</button>
+                </form>
+            </div>
+
             <div id="view-aar" class="hidden">
                  <form onsubmit="handleSubmit(event, 'AAR', 'AAR_ID')" class="bg-white p-6 rounded shadow max-w-4xl mx-auto">
-                    <h2 class="text-lg font-bold mb-4 border-b pb-2 text-indigo-800"><i class="fa-solid fa-clipboard-list mr-2"></i>บันทึกทบทวนปฏิบัติการ (After Action Review)</h2>
+                    <h2 class="text-lg font-bold mb-4 border-b pb-2 text-indigo-800"><i class="fa-solid fa-clipboard-list mr-2"></i>4. บันทึกทบทวนปฏิบัติการ (After Action Review)</h2>
                     <div class="grid grid-cols-1 gap-4">
                         <div>
-                            <label class="block text-xs font-bold mb-1">รหัสการทบทวน / ชื่อภารกิจหรือเหตุการณ์ *</label>
-                            <input type="text" name="AAR_ID" placeholder="เช่น AAR-ภารกิจศูนย์พักพิงที่ 1" required class="w-full p-2 border rounded bg-gray-50">
+                            <label class="block text-xs font-bold mb-1">รหัสการทบทวน / ชื่อเหตุการณ์ *</label>
+                            <input type="text" name="AAR_ID" placeholder="เช่น AAR-ศูนย์พักพิงที่ 1" required class="w-full p-2 border rounded bg-gray-50">
                         </div>
                         
                         <div class="p-4 bg-blue-50 border border-blue-200 rounded">
                             <label class="block text-sm font-bold text-blue-800 mb-1">1. ชอบอะไร (What went well / What did you like?)</label>
-                            <p class="text-xs text-blue-600 mb-2">สิ่งที่ประทับใจ หรือสิ่งที่คิดว่าระบบ/แผนงานออกแบบมาได้ดีแล้ว</p>
+                            <p class="text-xs text-blue-600 mb-2">สิ่งที่ประทับใจ หรือสิ่งที่คิดว่าระบบออกแบบมาได้ดีแล้ว</p>
                             <textarea name="Like" rows="2" class="w-full p-2 border rounded"></textarea>
                         </div>
 
                         <div class="p-4 bg-green-50 border border-green-200 rounded">
                             <label class="block text-sm font-bold text-green-800 mb-1">2. ทำอะไรได้ดี (What did we do well?)</label>
-                            <p class="text-xs text-green-600 mb-2">การปฏิบัติงานจริงของทีม หรือการแก้ปัญหาเฉพาะหน้าที่ทำได้ดีเยี่ยม</p>
+                            <p class="text-xs text-green-600 mb-2">การปฏิบัติงานจริงของทีม หรือการแก้ปัญหาเฉพาะหน้าที่ทำได้ดี</p>
                             <textarea name="Done_Well" rows="2" class="w-full p-2 border rounded"></textarea>
                         </div>
 
                         <div class="p-4 bg-purple-50 border border-purple-200 rounded">
                             <label class="block text-sm font-bold text-purple-800 mb-1">3. ได้เรียนรู้อะไร (What did we learn?)</label>
-                            <p class="text-xs text-purple-600 mb-2">บทเรียนที่ได้รับ ความรู้ใหม่ หรือช่องโหว่ที่เพิ่งค้นพบจากสถานการณ์นี้</p>
+                            <p class="text-xs text-purple-600 mb-2">บทเรียนที่ได้รับ ความรู้ใหม่ หรือช่องโหว่ที่เพิ่งค้นพบ</p>
                             <textarea name="Learned" rows="2" class="w-full p-2 border rounded"></textarea>
                         </div>
 
                         <div class="p-4 bg-orange-50 border border-orange-200 rounded">
                             <label class="block text-sm font-bold text-orange-800 mb-1">4. จะดีกว่านี้ถ้า... (Even better if...)</label>
-                            <p class="text-xs text-orange-600 mb-2">ข้อเสนอแนะเพื่อปรับปรุงแผนงาน หรือทรัพยากรที่ต้องการเพิ่มเติมในครั้งต่อไป</p>
+                            <p class="text-xs text-orange-600 mb-2">ข้อเสนอแนะเพื่อปรับปรุง หรือทรัพยากรที่ต้องการเพิ่มเติมในครั้งหน้า</p>
                             <textarea name="Better_If" rows="2" class="w-full p-2 border rounded"></textarea>
                         </div>
                     </div>
-                    <button type="submit" class="mt-6 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded font-bold w-full text-lg shadow-md">บันทึกข้อเสนอแนะ AAR</button>
+                    <button type="submit" class="mt-6 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded font-bold w-full shadow-md">บันทึกข้อเสนอแนะ AAR</button>
+                </form>
+            </div>
+
+            <div id="view-network" class="hidden">
+                <form onsubmit="handleSubmit(event, 'Network', 'Agency_ID')" class="bg-white p-6 rounded shadow max-w-4xl mx-auto">
+                    <h2 class="text-lg font-bold mb-4 border-b pb-2 text-indigo-800"><i class="fa-solid fa-handshake mr-2"></i>5. ทะเบียนเครือข่ายความร่วมมือ (Network)</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><label class="block text-xs font-bold mb-1">รหัสหน่วยงานภาคี *</label><input type="text" name="Agency_ID" required placeholder="เช่น NET-001" class="w-full p-2 border rounded"></div>
+                        <div><label class="block text-xs font-bold mb-1">ชื่อหน่วยงาน / องค์กร *</label><input type="text" name="Agency_Name" required class="w-full p-2 border rounded"></div>
+                        <div><label class="block text-xs font-bold mb-1">รูปแบบการสนับสนุน</label><input type="text" name="Support_Type" placeholder="เช่น ด้านกำลังคน, สถานที่, งบประมาณ" class="w-full p-2 border rounded"></div>
+                        <div><label class="block text-xs font-bold mb-1">ผู้ประสานงาน และเบอร์โทร 24 ชม.</label><input type="text" name="Contact_Info" placeholder="ระบุชื่อและเบอร์โทร" class="w-full p-2 border rounded"></div>
+                    </div>
+                    <button type="submit" class="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded font-bold w-full">บันทึกข้อมูลเครือข่าย</button>
                 </form>
             </div>
 
@@ -159,7 +214,6 @@
             // หากเปิดหน้า dashboard ให้จัดการ render map/chart ถ้ายังไม่เคยทำ
             if(viewId === 'dashboard') {
                 if(!mapInitialized) initDashboard();
-                // บังคับ Chart ให้ update ขยับตัวเมื่อเปลี่ยนหน้าต่าง
                 if(window.myTriageChart) window.myTriageChart.update();
             }
         }
@@ -182,17 +236,15 @@
         function initDashboard() {
             if (mapInitialized) return;
 
-            // ตั้งค่า Map
             try {
-                const map = L.map('map').setView([17.48, 101.72], 10); // พิกัดคร่าวๆ (จ.เลย)
+                // เซ็ตแผนที่ไปที่จังหวัดเลย (พิกัด 17.48, 101.72)
+                const map = L.map('map').setView([17.48, 101.72], 10);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
                 L.marker([17.48, 101.72]).addTo(map).bindPopup("<b>โซนวิกฤต</b><br>พบเคสสะสม 12 เคส").openPopup();
                 
-                // แก้ปัญหา Map ไม่โหลดเต็มพื้นที่เมื่ออยู่ใน div ที่ถูกซ่อนตอนโหลดครั้งแรก
                 setTimeout(() => { map.invalidateSize(); }, 300);
             } catch(e) { console.log('Map init error:', e); }
 
-            // ตั้งค่า Chart
             try {
                 const ctx = document.getElementById('triageChart').getContext('2d');
                 window.myTriageChart = new Chart(ctx, {
@@ -249,12 +301,10 @@
             if(!input) return;
             const history = document.getElementById('chat-history');
             
-            // พิมพ์ข้อความฝั่งผู้ใช้
             history.innerHTML += `<div class="bg-indigo-100 p-3 rounded-lg max-w-[80%] ml-auto text-right border border-indigo-200"><b>You:</b> ${input}</div>`;
             document.getElementById('ai-input').value = '';
             history.scrollTop = history.scrollHeight;
             
-            // หน่วงเวลาจำลอง AI ตอบกลับ
             setTimeout(() => {
                 history.innerHTML += `<div class="bg-gray-100 p-3 rounded-lg max-w-[80%] border border-gray-200"><b>AI:</b> จากฐานข้อมูลแนวทางปฏิบัติ: หากพบผู้รับผลกระทบที่มีความเครียดสูงและอารมณ์รุนแรง แนะนำให้ใช้หลักการ 3L (Look, Listen, Link) โดยเริ่มจากการประเมินความปลอดภัยของสถานที่ (Look) รับฟังด้วยความเข้าใจโดยไม่ตัดสิน (Listen) และหากประเมินว่าเกินศักยภาพให้ส่งต่อทีมช่วยเหลือ (Link) ทันทีครับ</div>`;
                 history.scrollTop = history.scrollHeight;
