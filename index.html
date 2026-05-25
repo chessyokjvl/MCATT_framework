@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCATT Standalone Command Suite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="min-h-screen flex flex-col">
+        <header class="bg-blue-900 text-white p-4 shadow-md">
+            <h1 class="text-xl font-bold">MCATT Command Suite</h1>
+            <p class="text-sm text-blue-200">ระบบบริหารจัดการฐานข้อมูลเยียวยาจิตใจ (Standalone)</p>
+        </header>
+
+        <nav class="bg-white shadow-sm flex overflow-x-auto text-sm font-medium border-b border-gray-200">
+            <button onclick="switchTab('patients')" id="tab-patients" class="tab-btn p-4 border-b-2 border-blue-600 text-blue-600 font-bold">1. ข้อมูลผู้ได้รับผลกระทบ</button>
+            <button onclick="switchTab('staff')" id="tab-staff" class="tab-btn p-4 border-b-2 border-transparent text-gray-500 hover:text-gray-700">2. ทีมปฏิบัติงาน</button>
+            <button onclick="switchTab('aar')" id="tab-aar" class="tab-btn p-4 border-b-2 border-transparent text-gray-500 hover:text-gray-700">3. บันทึก AAR & RCA</button>
+        </nav>
+
+        <main class="flex-1 container mx-auto p-4 max-w-4xl mt-4">
+            <div id="alert-box" class="hidden mb-4 p-4 rounded-lg text-sm font-bold"></div>
+
+            <div id="content-patients" class="tab-content block bg-white p-6 rounded-lg shadow-sm">
+                <h2 class="text-lg font-bold mb-4 text-blue-800 border-l-4 border-blue-600 pl-2">ลงทะเบียนผู้ได้รับผลกระทบ</h2>
+                <form onsubmit="handleSubmit(event, 'Patients', 'CID')" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold mb-1">CID (13 หลัก) *</label>
+                        <input type="text" name="CID" required maxlength="13" class="w-full p-2 border rounded">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold mb-1">ชื่อ-นามสกุล *</label>
+                        <input type="text" name="Fullname" required class="w-full p-2 border rounded">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold mb-1">ระดับความรุนแรง</label>
+                        <select name="Severity" class="w-full p-2 border rounded">
+                            <option value="เขียว (ปกติ/เครียดน้อย)">เขียว (ปกติ/เครียดน้อย)</option>
+                            <option value="เหลือง (เสี่ยง/เครียดปานกลาง)">เหลือง (เสี่ยง/เครียดปานกลาง)</option>
+                            <option value="แดง (วิกฤต/เสี่ยงรุนแรง)">แดง (วิกฤต/เสี่ยงรุนแรง)</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-2 text-right mt-2">
+                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700">บันทึกข้อมูล (Upsert)</button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="content-staff" class="tab-content hidden bg-white p-6 rounded-lg shadow-sm">
+                <h2 class="text-lg font-bold mb-4 text-green-800 border-l-4 border-green-600 pl-2">ลงทะเบียนผู้ปฏิบัติงาน</h2>
+                <form onsubmit="handleSubmit(event, 'Staff', 'Staff_ID')" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold mb-1">รหัสเจ้าหน้าที่ *</label>
+                        <input type="text" name="Staff_ID" required class="w-full p-2 border rounded">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold mb-1">ชื่อ-นามสกุล *</label>
+                        <input type="text" name="Staff_Name" required class="w-full p-2 border rounded">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold mb-1">หน้าที่/บทบาท</label>
+                        <input type="text" name="Role" class="w-full p-2 border rounded">
+                    </div>
+                    <div class="md:col-span-2 text-right mt-2">
+                        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700">บันทึกเจ้าหน้าที่</button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="content-aar" class="tab-content hidden bg-white p-6 rounded-lg shadow-sm">
+                <h2 class="text-lg font-bold mb-4 text-yellow-800 border-l-4 border-yellow-500 pl-2">บันทึก AAR & RCA</h2>
+                <form onsubmit="handleSubmit(event, 'AAR_RCA', 'Log_ID')" class="grid grid-cols-1 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold mb-1">รหัสเหตุการณ์ *</label>
+                        <input type="text" name="Log_ID" required placeholder="เช่น AAR-001" class="w-full p-2 border rounded">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold mb-1">ปัจจัยด้านระบบ (System/Latent Factors)</label>
+                        <textarea name="System_Factors" rows="2" class="w-full p-2 border rounded"></textarea>
+                    </div>
+                    <div class="text-right mt-2">
+                        <button type="submit" class="bg-yellow-500 text-white px-4 py-2 rounded shadow hover:bg-yellow-600">บันทึก AAR</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        // ฟังก์ชันสลับหน้าต่าง
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById('content-' + tabId).classList.remove('hidden');
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('border-blue-600', 'text-blue-600', 'font-bold');
+                btn.classList.add('border-transparent', 'text-gray-500');
+            });
+            document.getElementById('tab-' + tabId).classList.add('border-blue-600', 'text-blue-600', 'font-bold');
+            document.getElementById('tab-' + tabId).classList.remove('border-transparent', 'text-gray-500');
+        }
+
+        // ฟังก์ชันส่งข้อมูลไปยัง Google Sheets
+        async function handleSubmit(event, sheetName, primaryKey) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const dataObj = {};
+            formData.forEach((value, key) => { dataObj[key] = value.trim(); });
+            dataObj['Timestamp'] = new Date().toLocaleString('th-TH');
+
+            const payload = { action: "upsert", sheet: sheetName, primaryKey: primaryKey, data: dataObj };
+            
+            showAlert('กำลังส่งข้อมูล...', 'bg-blue-100 text-blue-700');
+
+            try {
+                const response = await fetch(CONFIG.API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                showAlert('บันทึกข้อมูลเรียบร้อยแล้ว!', 'bg-green-100 text-green-700');
+                form.reset();
+            } catch (error) {
+                showAlert(`ขัดข้อง: ${error.message} - เซฟลงเครื่องแล้ว`, 'bg-red-100 text-red-700');
+            }
+        }
+
+        // ฟังก์ชันแสดงกล่องข้อความ
+        function showAlert(msg, classes) {
+            const box = document.getElementById('alert-box');
+            box.className = `mb-4 p-4 rounded-lg text-sm font-bold block ${classes}`;
+            box.innerText = msg;
+            setTimeout(() => box.classList.add('hidden'), 4000);
+        }
+    </script>
+</body>
+</html>
