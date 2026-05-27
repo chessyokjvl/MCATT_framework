@@ -11,9 +11,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: 'Sarabun', sans-serif; }
-        .timeline-item::before {
-            content: ''; position: absolute; left: -5px; top: 6px; width: 10px; height: 10px; border-radius: 50%; background-color: #4f46e5;
-        }
+        .timeline-item::before { content: ''; position: absolute; left: -5px; top: 6px; width: 10px; height: 10px; border-radius: 50%; background-color: #4f46e5; }
+        /* เอฟเฟกต์สำหรับการ์ดที่คลิกได้ */
+        .clickable-card { cursor: pointer; transition: all 0.2s ease-in-out; }
+        .clickable-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
     </style>
 </head>
 <body class="bg-gray-100 flex flex-col h-screen overflow-hidden text-gray-800">
@@ -34,7 +35,7 @@
                 <button onclick="switchView('ai')" id="btn-ai" class="nav-btn w-full text-left p-3 rounded hover:bg-indigo-800 text-amber-300"><i class="fa-solid fa-robot mr-2 w-5"></i> ผู้ช่วย AI Support</button>
             </div>
             <div class="p-4 text-xs text-indigo-300 text-center border-t border-indigo-800">
-                MCATT Standalone V.1
+                MCATT Standalone V.2 (Live Data)
             </div>
         </nav>
 
@@ -45,29 +46,26 @@
 
             <div id="view-dashboard" class="view-section block">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-bold text-indigo-900"><i class="fa-solid fa-chart-line mr-2"></i>Command Center Dashboard</h2>
-                    <select class="bg-white border border-gray-300 rounded p-2 text-sm shadow-sm font-bold text-gray-700" onchange="simulateFilter(this.value)">
-                        <option value="all">ข้อมูลทั้งหมด (All Time)</option>
-                        <option value="today">วันนี้ (Today)</option>
-                        <option value="week">สัปดาห์นี้ (This Week)</option>
-                        <option value="month">เดือนนี้ (This Month)</option>
-                    </select>
+                    <div>
+                        <h2 class="text-xl font-bold text-indigo-900"><i class="fa-solid fa-chart-line mr-2"></i>Command Center Dashboard</h2>
+                        <p class="text-xs text-gray-500 mt-1">ประมวลผลจากข้อมูลจริงในระบบ (คลิกที่การ์ดเพื่อกรองข้อมูลในตารางอัตโนมัติ)</p>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                    <div class="bg-white p-4 rounded shadow border-l-4 border-red-500 flex justify-between items-center">
+                    <div onclick="applyFilterAndSwitch('แดง')" class="clickable-card bg-white p-4 rounded shadow border-l-4 border-red-500 flex justify-between items-center hover:bg-red-50" title="คลิกเพื่อดูเฉพาะเคสวิกฤต">
                         <div><p class="text-xs text-gray-500 font-bold">วิกฤต (แดง)</p><span class="text-2xl font-black text-red-600" id="dash-red">0</span></div>
                         <i class="fa-solid fa-triangle-exclamation text-3xl text-red-100"></i>
                     </div>
-                    <div class="bg-white p-4 rounded shadow border-l-4 border-orange-500 flex justify-between items-center">
+                    <div onclick="applyFilterAndSwitch('ส้ม')" class="clickable-card bg-white p-4 rounded shadow border-l-4 border-orange-500 flex justify-between items-center hover:bg-orange-50" title="คลิกเพื่อดูเฉพาะเคสเสี่ยงสูง">
                         <div><p class="text-xs text-gray-500 font-bold">เสี่ยงสูง (ส้ม)</p><span class="text-2xl font-black text-orange-600" id="dash-orange">0</span></div>
                         <i class="fa-solid fa-bolt text-3xl text-orange-100"></i>
                     </div>
-                    <div class="bg-white p-4 rounded shadow border-l-4 border-yellow-500 flex justify-between items-center">
+                    <div onclick="applyFilterAndSwitch('เหลือง')" class="clickable-card bg-white p-4 rounded shadow border-l-4 border-yellow-500 flex justify-between items-center hover:bg-yellow-50" title="คลิกเพื่อดูเฉพาะเคสเสี่ยง">
                         <div><p class="text-xs text-gray-500 font-bold">เสี่ยง (เหลือง)</p><span class="text-2xl font-black text-yellow-600" id="dash-yellow">0</span></div>
                         <i class="fa-solid fa-user-shield text-3xl text-yellow-100"></i>
                     </div>
-                    <div class="bg-white p-4 rounded shadow border-l-4 border-green-500 flex justify-between items-center">
+                    <div onclick="applyFilterAndSwitch('เขียว')" class="clickable-card bg-white p-4 rounded shadow border-l-4 border-green-500 flex justify-between items-center hover:bg-green-50" title="คลิกเพื่อดูเฉพาะเคสเฝ้าระวัง">
                         <div><p class="text-xs text-gray-500 font-bold">เฝ้าระวัง (เขียว)</p><span class="text-2xl font-black text-green-600" id="dash-green">0</span></div>
                         <i class="fa-solid fa-heart-pulse text-3xl text-green-100"></i>
                     </div>
@@ -84,7 +82,8 @@
                                     <th class="border p-3 bg-orange-50 text-orange-700 w-24">ส้ม<br><span class="text-xs font-normal">เสี่ยงสูง</span></th>
                                     <th class="border p-3 bg-yellow-50 text-yellow-700 w-24">เหลือง<br><span class="text-xs font-normal">เสี่ยง</span></th>
                                     <th class="border p-3 bg-green-50 text-green-700 w-24">เขียว<br><span class="text-xs font-normal">เฝ้าระวัง</span></th>
-                                    <th class="border p-3 bg-indigo-50 text-indigo-800 w-24 font-black">รวม (ร้อยละ)</th>
+                                    <th class="border p-3 bg-gray-50 text-gray-600 w-24">รอประเมิน<br><span class="text-xs font-normal">Triage</span></th>
+                                    <th class="border p-3 bg-indigo-50 text-indigo-800 w-24 font-black">รวมทั้งหมด</th>
                                 </tr>
                             </thead>
                             <tbody id="matrix-body">
@@ -99,7 +98,7 @@
                         <div id="map" class="flex-1 rounded border z-0"></div>
                     </div>
                     <div class="bg-white p-4 rounded shadow h-80 flex flex-col">
-                        <h3 class="font-bold mb-2"><i class="fa-solid fa-chart-column text-indigo-600 mr-2"></i>สถานะ Triage สะสมตามช่วงเวลา</h3>
+                        <h3 class="font-bold mb-2"><i class="fa-solid fa-chart-column text-indigo-600 mr-2"></i>สถานะ Triage สะสมแบบเรียลไทม์</h3>
                         <div class="flex-1 relative"><canvas id="triageChart"></canvas></div>
                     </div>
                 </div>
@@ -168,9 +167,12 @@
                         <div class="flex justify-between items-center mb-4 border-b pb-2">
                             <h2 class="text-xl font-bold text-yellow-800"><i class="fa-solid fa-users-viewfinder mr-2"></i>2. ทะเบียนเคส และ Operation Console</h2>
                         </div>
-                        <div class="relative mb-6">
-                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"><i class="fa-solid fa-search text-gray-400"></i></div>
-                            <input type="text" id="universal-search" onkeyup="filterPatients()" placeholder="ค้นหาเคสด้วย เลขบัตรประชาชน, ชื่อ, เพศ หรือ พิกัด..." class="bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-yellow-500 focus:border-yellow-500 block w-full pl-10 p-3 shadow-sm">
+                        <div class="relative mb-6 flex gap-2">
+                            <div class="relative flex-1">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"><i class="fa-solid fa-search text-gray-400"></i></div>
+                                <input type="text" id="universal-search" onkeyup="filterPatients()" placeholder="ค้นหาเคสด้วย เลขบัตรประชาชน, ชื่อ, พิกัด หรือพิมพ์ สี Triage (เช่น แดง) เพื่อกรองข้อมูล..." class="bg-yellow-50 border border-yellow-300 text-gray-900 text-base rounded-lg focus:ring-yellow-500 focus:border-yellow-500 block w-full pl-10 p-3 shadow-sm font-bold">
+                            </div>
+                            <button onclick="document.getElementById('universal-search').value=''; filterPatients();" class="bg-gray-200 hover:bg-gray-300 px-4 rounded-lg font-bold text-gray-700"><i class="fa-solid fa-times"></i> ล้าง</button>
                         </div>
                         <div class="overflow-x-auto rounded border border-gray-200 shadow-sm">
                             <table class="w-full text-sm text-left text-gray-600">
@@ -207,7 +209,6 @@
                                     <input type="hidden" name="LogID" id="assessment-log-id">
                                     
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5 bg-gray-50 p-5 rounded border border-gray-200">
-                                        
                                         <div>
                                             <label class="block text-xs font-bold text-gray-700 mb-1">A : Agression (ความก้าวร้าว)</label>
                                             <select name="Assess_A" id="assess_a" onchange="updateTriageLogic()" class="w-full p-2.5 border border-gray-300 rounded text-sm font-bold focus:ring-indigo-500">
@@ -218,7 +219,6 @@
                                             </select>
                                             <p id="hint_a" class="text-xs mt-2 font-bold text-green-600 bg-white p-1 rounded border"><i class="fa-solid fa-stethoscope"></i> Action: -</p>
                                         </div>
-
                                         <div>
                                             <label class="block text-xs font-bold text-gray-700 mb-1">B : Suicidal Behaviors (ทำร้ายตนเอง)</label>
                                             <select name="Assess_B" id="assess_b" onchange="updateTriageLogic()" class="w-full p-2.5 border border-gray-300 rounded text-sm font-bold focus:ring-indigo-500">
@@ -229,7 +229,6 @@
                                             </select>
                                             <p id="hint_b" class="text-xs mt-2 font-bold text-green-600 bg-white p-1 rounded border"><i class="fa-solid fa-stethoscope"></i> Action: -</p>
                                         </div>
-
                                         <div>
                                             <label class="block text-xs font-bold text-gray-700 mb-1">C : Confusion (ความสับสน)</label>
                                             <select name="Assess_C" id="assess_c" onchange="updateTriageLogic()" class="w-full p-2.5 border border-gray-300 rounded text-sm font-bold focus:ring-indigo-500">
@@ -240,7 +239,6 @@
                                             </select>
                                             <p id="hint_c" class="text-xs mt-2 font-bold text-green-600 bg-white p-1 rounded border"><i class="fa-solid fa-stethoscope"></i> Action: -</p>
                                         </div>
-
                                         <div>
                                             <label class="block text-xs font-bold text-gray-700 mb-1">D : Depression (ซึมเศร้า)</label>
                                             <select name="Assess_D" id="assess_d" onchange="updateTriageLogic()" class="w-full p-2.5 border border-gray-300 rounded text-sm font-bold focus:ring-indigo-500">
@@ -265,23 +263,13 @@
                                             <div>
                                                 <label class="block text-xs font-bold mb-1 text-gray-700">ระยะเวลาติดตาม (Follow-up Phase) *</label>
                                                 <select name="Phase" required class="w-full p-2.5 border border-gray-300 rounded font-bold">
-                                                    <option>ขณะเกิดเหตุ (72 ชม. แรก)</option>
-                                                    <option>หลังเกิดเหตุ 2 สัปดาห์</option>
-                                                    <option>หลังเกิดเหตุ 3 เดือน</option>
-                                                    <option>หลังเกิดเหตุ 6 เดือน</option>
-                                                    <option>หลังเกิดเหตุ 1 ปี</option>
-                                                    <option>อื่น ๆ</option>
+                                                    <option>ขณะเกิดเหตุ (72 ชม. แรก)</option><option>หลังเกิดเหตุ 2 สัปดาห์</option><option>หลังเกิดเหตุ 3 เดือน</option><option>หลังเกิดเหตุ 6 เดือน</option><option>หลังเกิดเหตุ 1 ปี</option>
                                                 </select>
                                             </div>
                                             <div>
                                                 <label class="block text-xs font-bold mb-1 text-gray-700">กิจกรรมการเยียวยาที่ได้รับ (Action) *</label>
                                                 <select name="Action" required class="w-full p-2.5 border border-gray-300 rounded font-bold">
-                                                    <option>ประเมิน Triage เท่านั้น</option>
-                                                    <option>ให้การปฐมพยาบาลทางใจ (PFA)</option>
-                                                    <option>ให้ความรู้สุขภาพจิต (Psychoeducation)</option>
-                                                    <option>การปรึกษาเชิงจิตวิทยา (Counseling)</option>
-                                                    <option>ส่งต่อพบแพทย์/จิตแพทย์ (Refer)</option>
-                                                    <option>ยุติการดูแล (Terminate / ปิดเคส)</option>
+                                                    <option>ประเมิน Triage เท่านั้น</option><option>ให้การปฐมพยาบาลทางใจ (PFA)</option><option>ให้ความรู้สุขภาพจิต (Psychoeducation)</option><option>การปรึกษาเชิงจิตวิทยา (Counseling)</option><option>ส่งต่อพบแพทย์/จิตแพทย์ (Refer)</option><option>ยุติการดูแล (Terminate / ปิดเคส)</option>
                                                 </select>
                                             </div>
                                             <div class="md:col-span-2">
@@ -389,49 +377,26 @@
                             <div>
                                 <label class="block text-xs font-bold mb-1 text-rose-800">ประเภทของปัญหาหลักที่พบ (Problem Category)</label>
                                 <select name="Problem_Type" class="w-full p-2 border rounded font-bold">
-                                    <option>ไม่มีปัญหา (Smooth Operation)</option>
-                                    <option>ด้านการสื่อสาร/สั่งการ (Communication)</option>
-                                    <option>ด้านทรัพยากร/อุปกรณ์ไม่พอ (Resources)</option>
-                                    <option>ด้านกำลังคน/ความเหนื่อยล้า (Manpower)</option>
-                                    <option>ด้านกระบวนการ/ล่าช้า (Process/Delay)</option>
+                                    <option>ไม่มีปัญหา (Smooth Operation)</option><option>ด้านการสื่อสาร/สั่งการ (Communication)</option><option>ด้านทรัพยากร/อุปกรณ์ไม่พอ (Resources)</option><option>ด้านกำลังคน/ความเหนื่อยล้า (Manpower)</option><option>ด้านกระบวนการ/ล่าช้า (Process/Delay)</option>
                                 </select>
                             </div>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="p-5 bg-blue-50 border border-blue-200 rounded shadow-sm">
-                                <label class="block text-base font-bold text-blue-800 mb-2">1. ชอบอะไร (What went well?)</label>
-                                <textarea name="Like" rows="3" class="w-full p-2 border rounded" placeholder="สิ่งที่ประทับใจ หรือสิ่งที่คิดว่าระบบออกแบบมาได้ดีแล้ว"></textarea>
+                                <label class="block text-base font-bold text-blue-800 mb-2">1. ชอบอะไร (What went well?)</label><textarea name="Like" rows="3" class="w-full p-2 border rounded" placeholder="สิ่งที่ประทับใจ หรือสิ่งที่คิดว่าระบบออกแบบมาได้ดีแล้ว"></textarea>
                             </div>
                             <div class="p-5 bg-green-50 border border-green-200 rounded shadow-sm">
-                                <label class="block text-base font-bold text-green-800 mb-2">2. ทำอะไรได้ดี (Done well?)</label>
-                                <textarea name="Done_Well" rows="3" class="w-full p-2 border rounded" placeholder="การปฏิบัติงานจริงของทีม หรือการแก้ปัญหาเฉพาะหน้าที่ทำได้ดี"></textarea>
+                                <label class="block text-base font-bold text-green-800 mb-2">2. ทำอะไรได้ดี (Done well?)</label><textarea name="Done_Well" rows="3" class="w-full p-2 border rounded" placeholder="การปฏิบัติงานจริงของทีม หรือการแก้ปัญหาเฉพาะหน้าที่ทำได้ดี"></textarea>
                             </div>
                             <div class="p-5 bg-purple-50 border border-purple-200 rounded shadow-sm">
-                                <label class="block text-base font-bold text-purple-800 mb-2">3. ได้เรียนรู้อะไร (Learned?)</label>
-                                <textarea name="Learned" rows="3" class="w-full p-2 border rounded" placeholder="บทเรียนที่ได้รับ ความรู้ใหม่ หรือช่องโหว่ที่เพิ่งค้นพบ"></textarea>
+                                <label class="block text-base font-bold text-purple-800 mb-2">3. ได้เรียนรู้อะไร (Learned?)</label><textarea name="Learned" rows="3" class="w-full p-2 border rounded" placeholder="บทเรียนที่ได้รับ ความรู้ใหม่ หรือช่องโหว่ที่เพิ่งค้นพบ"></textarea>
                             </div>
                             <div class="p-5 bg-orange-50 border border-orange-200 rounded shadow-sm">
-                                <label class="block text-base font-bold text-orange-800 mb-2">4. จะดีกว่านี้ถ้า... (Better if...)</label>
-                                <textarea name="Better_If" rows="3" class="w-full p-2 border rounded" placeholder="ข้อเสนอแนะเพื่อปรับปรุง หรือทรัพยากรที่ต้องการเพิ่มเติมในครั้งหน้า"></textarea>
+                                <label class="block text-base font-bold text-orange-800 mb-2">4. จะดีกว่านี้ถ้า... (Better if...)</label><textarea name="Better_If" rows="3" class="w-full p-2 border rounded" placeholder="ข้อเสนอแนะเพื่อปรับปรุง หรือทรัพยากรที่ต้องการเพิ่มเติมในครั้งหน้า"></textarea>
                             </div>
                         </div>
                         <button type="submit" class="mt-8 bg-rose-600 hover:bg-rose-700 text-white px-4 py-3 rounded font-bold w-full shadow-lg text-lg"><i class="fa-solid fa-save mr-2"></i>บันทึกข้อเสนอแนะและถอดบทเรียน (AAR)</button>
                     </form>
-
-                    <div class="bg-white p-6 rounded shadow border border-gray-200">
-                        <h3 class="font-bold text-gray-700 mb-3 text-lg"><i class="fa-solid fa-clock-rotate-left mr-2"></i>ข้อมูล AAR ย้อนหลัง (History)</h3>
-                        <div class="overflow-x-auto rounded border">
-                            <table class="w-full text-sm text-left text-gray-600">
-                                <thead class="text-xs text-gray-700 uppercase bg-gray-100">
-                                    <tr><th class="px-4 py-3">รหัส/วันที่</th><th class="px-4 py-3">ปัญหาหลักที่พบ</th><th class="px-4 py-3">จะดีกว่านี้ถ้า... (Highlight)</th></tr>
-                                </thead>
-                                <tbody>
-                                    <tr class="bg-white border-b hover:bg-gray-50"><td class="px-4 py-3 font-bold">AAR-120569</td><td class="px-4 py-3"><span class="bg-red-100 text-red-800 px-2 py-1 rounded font-bold text-xs">ด้านการสื่อสาร</span></td><td class="px-4 py-3">มีวิทยุสื่อสารที่ครอบคลุมจุดพักพิงทั้งหมด</td></tr>
-                                    <tr class="bg-white border-b hover:bg-gray-50"><td class="px-4 py-3 font-bold">AAR-130569</td><td class="px-4 py-3"><span class="bg-green-100 text-green-800 px-2 py-1 rounded font-bold text-xs">ไม่มีปัญหา</span></td><td class="px-4 py-3">ทีมสับเปลี่ยนกะได้ตรงเวลามากขึ้น ทำให้คนทำงานไม่ล้า</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -441,21 +406,15 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div><label class="block text-xs font-bold mb-1 text-gray-700">รหัสหน่วยงานภาคี *</label><input type="text" name="Agency_ID" required placeholder="เช่น NET-001" class="w-full p-2.5 border rounded bg-cyan-50 font-bold"></div>
                         <div><label class="block text-xs font-bold mb-1 text-gray-700">ชื่อหน่วยงาน / องค์กร *</label><input type="text" name="Agency_Name" required class="w-full p-2.5 border rounded"></div>
-                        
                         <div class="md:col-span-2"><label class="block text-xs font-bold mb-1 text-gray-700">ประเภทความร่วมมือหลัก</label>
                             <select name="Collaboration_Type" class="w-full p-2.5 border rounded font-bold text-cyan-700">
-                                <option>หน่วยงานร่วมประเมิน/ลงพื้นที่ (Operation)</option>
-                                <option>หน่วยรับส่งต่อผู้ป่วย (Referral Hospital)</option>
-                                <option>หน่วยสนับสนุนปัจจัย/งบประมาณ (Sponsor)</option>
-                                <option>ผู้นำชุมชน/ฝ่ายปกครอง (Local Authority)</option>
+                                <option>หน่วยงานร่วมประเมิน/ลงพื้นที่ (Operation)</option><option>หน่วยรับส่งต่อผู้ป่วย (Referral Hospital)</option><option>หน่วยสนับสนุนปัจจัย/งบประมาณ (Sponsor)</option><option>ผู้นำชุมชน/ฝ่ายปกครอง (Local Authority)</option>
                             </select>
                         </div>
-                        
                         <div><label class="block text-xs font-bold mb-1 text-gray-700">ชื่อผู้ประสานงานหลัก</label><input type="text" name="Contact_Person" placeholder="ชื่อ-นามสกุล" class="w-full p-2.5 border rounded"></div>
                         <div><label class="block text-xs font-bold mb-1 text-gray-700">ช่องทางการติดต่อ (24 ชม.)</label><input type="text" name="Contact_Info" placeholder="เบอร์โทร, ไลน์กลุ่ม" class="w-full p-2.5 border rounded"></div>
-                        
                         <div class="md:col-span-2"><label class="block text-xs font-bold mb-1 text-gray-700">ประวัติการประสานงานเบื้องต้น (Log)</label>
-                            <textarea name="Coordination_Log" rows="3" placeholder="เช่น ขอความอนุเคราะห์รถพยาบาลฉุกเฉินสแตนบาย 2 คัน..." class="w-full p-2.5 border rounded"></textarea>
+                            <textarea name="Coordination_Log" rows="3" placeholder="เช่น ขอความอนุเคราะห์รถพยาบาลฉุกเฉิน..." class="w-full p-2.5 border rounded"></textarea>
                         </div>
                     </div>
                     <button type="submit" class="mt-6 bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-3 rounded font-bold w-full text-lg shadow"><i class="fa-solid fa-save mr-2"></i>บันทึกข้อมูลเครือข่าย</button>
@@ -470,7 +429,7 @@
                 <div class="bg-white flex-1 p-6 border flex flex-col rounded-b-lg shadow-lg mb-4 min-h-[400px]">
                     <div id="chat-history" class="flex-1 overflow-y-auto mb-4 text-base space-y-4 pr-4">
                         <div class="bg-gray-100 p-4 rounded-xl max-w-[85%] border border-gray-200 shadow-sm">
-                            <b class="text-purple-700"><i class="fa-solid fa-robot mr-1"></i> AI:</b> สวัสดีครับ คุณสามารถสอบถามแนวทางการปฐมพยาบาลทางใจ (PFA) หรือค้นหาข้อมูลการจัดการความเสี่ยงจากเหตุการณ์ในอดีตได้เลยครับ
+                            <b class="text-purple-700"><i class="fa-solid fa-robot mr-1"></i> AI:</b> สวัสดีครับ คุณสามารถสอบถามแนวทางการปฐมพยาบาลทางใจ (PFA) ได้เลยครับ
                         </div>
                     </div>
                     <div class="flex gap-3">
@@ -484,58 +443,39 @@
     </div>
 
     <script>
-        const CONFIG = { API_URL: "" }; // ลบ หรือแก้เป็น URL ของ Apps Script เมื่อพร้อม
+        const CONFIG = { API_URL: "" }; // ลบ หรือแก้เป็น URL ของ Apps Script เมื่อพร้อมเชื่อมต่อ Backend
+        
+        // --- 1. STATE MANAGEMENT (Single Source of Truth) ---
+        // ใช้ LocalStorage เพื่อบันทึกข้อมูลไว้ในเบราว์เซอร์ให้สามารถทดสอบความเชื่อมโยงข้อมูลจริงได้ทันที
+        let globalPatients = JSON.parse(localStorage.getItem('mcatt_patients')) || [];
 
-        // --- ข้อมูลสำหรับ Dashboard Matrix ---
-        const matrixData = [
-            { type: "Type A (ผู้ได้รับผลกระทบวงในสุด)", red: 8, orange: 6, yellow: 15, green: 20 },
-            { type: "Type B (ชุมชนคนใกล้ชิด)", red: 2, orange: 1, yellow: 20, green: 50 },
-            { type: "Type C (ประชาชนทั่วไปวงนอก)", red: 0, orange: 1, yellow: 8, green: 25 },
-            { type: "Type D (ทีมผู้ปฏิบัติงาน)", red: 2, orange: 0, yellow: 2, green: 7 }
-        ];
-
-        // --- ข้อมูลสำหรับ Universal Search ---
-        const mockPatients = [
-            { cid: "1100112233445", name: "นาย สมชาย ใจดี", mcatt: "A", gender: "ชาย", age: 35, triage: "แดง", location: "ศูนย์พักพิง อบต.", timeline: [
-                { time: "12 พ.ค. 69 - 14:00", action: "ประเมิน Triage (แดง)", detail: "พบความเสี่ยงสูง ขู่ทำร้ายผู้อื่น", color: "text-red-600" },
-                { time: "12 พ.ค. 69 - 10:00", action: "ขึ้นทะเบียนใหม่", detail: "จากทีมลงพื้นที่", color: "text-green-600" }
-            ]},
-            { cid: "3300998877665", name: "นาง สมหญิง มิ่งขวัญ", mcatt: "B", gender: "หญิง", age: 42, triage: "เหลือง", location: "บ้านพัก", timeline: [
-                { time: "13 พ.ค. 69 - 09:30", action: "ประเมิน Triage (เหลือง)", detail: "ซึมเศร้า วางแผน PFA", color: "text-yellow-600" }
-            ]},
-            { cid: "1234567890123", name: "ด.ช. รักดี เรียนเก่ง", mcatt: "A", gender: "ชาย", age: 12, triage: "เขียว", location: "โรงเรียน", timeline: [
-                { time: "14 พ.ค. 69 - 11:00", action: "ประเมิน Triage (เขียว)", detail: "ปกติ เฝ้าระวัง 2 สัปดาห์", color: "text-green-600" }
-            ]}
-        ];
-
-        // --- ข้อมูล Triage Logic ABCD ---
+        // --- 2. Triage Calculation Rules ---
         const triageLogic = {
             A: { "เขียว": { action: "-", class: "text-green-600" }, "เหลือง": { action: "Change negative thoughts / Calm down", class: "text-yellow-600" }, "ส้ม": { action: "Suggestion / Breathing exercise / จำกัดบริเวณ", class: "text-orange-500" }, "แดง": { action: "Restrain หรือ ส่ง รพ.", class: "text-red-600" } },
             B: { "เขียว": { action: "-", class: "text-green-600" }, "เหลือง": { action: "รับฟังอย่างตั้งใจ / Emotional support", class: "text-yellow-600" }, "ส้ม": { action: "แนะนำเข้ารับบริการ/แจ้งผลกระทบ", class: "text-orange-500" }, "แดง": { action: "ส่ง รพ.", class: "text-red-600" } },
             C: { "เขียว": { action: "-", class: "text-green-600" }, "เหลือง": { action: "Breathing exercise / รับฟังอย่างตั้งใจ", class: "text-yellow-600" }, "ส้ม": { action: "Breathing exercise / Relaxation", class: "text-orange-500" }, "แดง": { action: "ประเมินส่งแพทย์/รพ. / Grounding", class: "text-red-600" } },
             D: { "เขียว": { action: "-", class: "text-green-600" }, "เหลือง": { action: "สังเกตอาการ/นั่งพูดคุย/รับฟัง", class: "text-yellow-600" }, "ส้ม": { action: "ปล่อยให้ระบายอารมณ์ / Mindfulness", class: "text-orange-500" }, "แดง": { action: "ประเมินส่งแพทย์/รพ. / Grounding / Relaxation", class: "text-red-600" } }
         };
-        const colorScores = { "เขียว": 1, "เหลือง": 2, "ส้ม": 3, "แดง": 4 };
+        const colorScores = { "รอประเมิน":0, "เขียว": 1, "เหลือง": 2, "ส้ม": 3, "แดง": 4 };
         const scoreColors = { 1: "เขียว", 2: "เหลือง", 3: "ส้ม", 4: "แดง" };
 
         let mapInitialized = false;
 
-        // --- Initialization ---
+        // --- 3. INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => { 
-            renderMatrix(1); 
+            updateDashboardStats(); 
             initDashboard(); 
             renderPatientTable();
-            // Default view = dashboard
             switchView('dashboard');
         });
 
-        // --- Navigation ---
+        // --- 4. NAVIGATION & FILTER ACTIONS ---
         function switchView(viewId) {
             document.querySelectorAll('.view-section').forEach(el => { el.classList.remove('block'); el.classList.add('hidden'); });
             document.getElementById(`view-${viewId}`).classList.remove('hidden');
             document.getElementById(`view-${viewId}`).classList.add('block');
 
-            // เปลี่ยนสีปุ่มเมนู
+            // เปลี่ยนสีปุ่มเมนู Sidebar
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('bg-indigo-800', 'border-l-4', 'border-indigo-400'));
             const activeBtn = document.getElementById(`btn-${viewId}`);
             if(activeBtn) activeBtn.classList.add('bg-indigo-800', 'border-l-4', 'border-indigo-400');
@@ -546,25 +486,68 @@
             }
         }
 
-        // --- Dashboard Logic ---
-        function renderMatrix(multiplier) {
+        // ฟังก์ชันเมื่อคลิกที่ Card หรือ Matrix บน Dashboard ให้ไปกรองข้อมูลหน้า Operation
+        function applyFilterAndSwitch(keyword) {
+            switchView('operations');
+            document.getElementById('universal-search').value = keyword;
+            filterPatients();
+        }
+
+        // --- 5. DYNAMIC DASHBOARD CALCULATION ---
+        function updateDashboardStats() {
+            let counts = { "แดง": 0, "ส้ม": 0, "เหลือง": 0, "เขียว": 0 };
+            
+            // โครงสร้าง Matrix [MCATT Type] x [Triage Color]
+            let matrix = {
+                "A": { red: 0, orange: 0, yellow: 0, green: 0, unassessed: 0 },
+                "B": { red: 0, orange: 0, yellow: 0, green: 0, unassessed: 0 },
+                "C": { red: 0, orange: 0, yellow: 0, green: 0, unassessed: 0 },
+                "D": { red: 0, orange: 0, yellow: 0, green: 0, unassessed: 0 }
+            };
+
+            globalPatients.forEach(p => {
+                if (counts[p.triage] !== undefined) counts[p.triage]++;
+                
+                let mType = p.mcatt; // A, B, C, D
+                if(matrix[mType]) {
+                    if (p.triage === 'แดง') matrix[mType].red++;
+                    else if (p.triage === 'ส้ม') matrix[mType].orange++;
+                    else if (p.triage === 'เหลือง') matrix[mType].yellow++;
+                    else if (p.triage === 'เขียว') matrix[mType].green++;
+                    else matrix[mType].unassessed++;
+                }
+            });
+
+            // อัปเดต Ticker บนสุด
+            document.getElementById('dash-red').innerText = counts["แดง"];
+            document.getElementById('dash-orange').innerText = counts["ส้ม"];
+            document.getElementById('dash-yellow').innerText = counts["เหลือง"];
+            document.getElementById('dash-green').innerText = counts["เขียว"];
+
+            // อัปเดตตาราง Matrix
             const tbody = document.getElementById('matrix-body');
             tbody.innerHTML = '';
-            let totalRed = 0, totalOrange = 0, totalYellow = 0, totalGreen = 0, grandTotal = 0;
+            let totalRed = 0, totalOrange = 0, totalYellow = 0, totalGreen = 0, totalUn = 0, grandTotal = globalPatients.length;
 
-            matrixData.forEach(row => {
-                let r = Math.round(row.red * multiplier); let o = Math.round(row.orange * multiplier);
-                let y = Math.round(row.yellow * multiplier); let g = Math.round(row.green * multiplier);
-                let rowTotal = r + o + y + g;
-                totalRed += r; totalOrange += o; totalYellow += y; totalGreen += g; grandTotal += rowTotal;
+            const typeLabels = {
+                "A": "Type A (ผู้ได้รับผลกระทบโดยตรง)", "B": "Type B (ชุมชนวงใน)", 
+                "C": "Type C (ประชาชนวงนอก)", "D": "Type D (ทีมผู้ปฏิบัติงาน)"
+            };
+
+            ['A', 'B', 'C', 'D'].forEach(t => {
+                let row = matrix[t];
+                let rowTotal = row.red + row.orange + row.yellow + row.green + row.unassessed;
+                totalRed += row.red; totalOrange += row.orange; totalYellow += row.yellow; 
+                totalGreen += row.green; totalUn += row.unassessed;
 
                 tbody.innerHTML += `
-                    <tr class="border-b hover:bg-gray-50 transition">
-                        <td class="border-r p-3 text-left font-bold text-gray-700">${row.type}</td>
-                        <td class="border-r p-3 font-bold text-red-600">${r}</td>
-                        <td class="border-r p-3 font-bold text-orange-600">${o}</td>
-                        <td class="border-r p-3 font-bold text-yellow-600">${y}</td>
-                        <td class="border-r p-3 font-bold text-green-600">${g}</td>
+                    <tr class="border-b hover:bg-gray-50 transition cursor-pointer" onclick="applyFilterAndSwitch('Type ${t}')" title="กดคลิกเพื่อกรองข้อมูล Type ${t}">
+                        <td class="border-r p-3 text-left font-bold text-gray-700">${typeLabels[t]}</td>
+                        <td class="border-r p-3 font-bold text-red-600">${row.red}</td>
+                        <td class="border-r p-3 font-bold text-orange-600">${row.orange}</td>
+                        <td class="border-r p-3 font-bold text-yellow-600">${row.yellow}</td>
+                        <td class="border-r p-3 font-bold text-green-600">${row.green}</td>
+                        <td class="border-r p-3 font-bold text-gray-500">${row.unassessed}</td>
                         <td class="p-3 font-black bg-indigo-50 text-indigo-800">${rowTotal}</td>
                     </tr>`;
             });
@@ -572,78 +555,34 @@
             tbody.innerHTML += `
                 <tr class="bg-gray-200 border-t-2 border-gray-400">
                     <td class="border-r p-3 text-right font-black text-gray-800">รวมทั้งหมด</td>
-                    <td class="border-r p-3 font-black text-red-700">${totalRed} <br><span class="text-xs font-normal text-gray-600">(${((totalRed/grandTotal)*100||0).toFixed(1)}%)</span></td>
-                    <td class="border-r p-3 font-black text-orange-700">${totalOrange} <br><span class="text-xs font-normal text-gray-600">(${((totalOrange/grandTotal)*100||0).toFixed(1)}%)</span></td>
-                    <td class="border-r p-3 font-black text-yellow-700">${totalYellow} <br><span class="text-xs font-normal text-gray-600">(${((totalYellow/grandTotal)*100||0).toFixed(1)}%)</span></td>
-                    <td class="border-r p-3 font-black text-green-700">${totalGreen} <br><span class="text-xs font-normal text-gray-600">(${((totalGreen/grandTotal)*100||0).toFixed(1)}%)</span></td>
+                    <td class="border-r p-3 font-black text-red-700">${totalRed} <span class="text-xs font-normal">(${((totalRed/grandTotal)*100||0).toFixed(0)}%)</span></td>
+                    <td class="border-r p-3 font-black text-orange-700">${totalOrange} <span class="text-xs font-normal">(${((totalOrange/grandTotal)*100||0).toFixed(0)}%)</span></td>
+                    <td class="border-r p-3 font-black text-yellow-700">${totalYellow} <span class="text-xs font-normal">(${((totalYellow/grandTotal)*100||0).toFixed(0)}%)</span></td>
+                    <td class="border-r p-3 font-black text-green-700">${totalGreen} <span class="text-xs font-normal">(${((totalGreen/grandTotal)*100||0).toFixed(0)}%)</span></td>
+                    <td class="border-r p-3 font-black text-gray-700">${totalUn}</td>
                     <td class="p-3 font-black text-indigo-900">${grandTotal}</td>
                 </tr>`;
-
-            document.getElementById('dash-red').innerText = totalRed;
-            document.getElementById('dash-orange').innerText = totalOrange;
-            document.getElementById('dash-yellow').innerText = totalYellow;
-            document.getElementById('dash-green').innerText = totalGreen;
         }
 
-        function simulateFilter(period) {
-            const mul = period === 'today' ? 0.2 : (period === 'week' ? 0.5 : (period === 'month' ? 0.8 : 1));
-            renderMatrix(mul);
-        }
-
-        function getLocation(id) {
-             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => { document.getElementById(id).value = `${pos.coords.latitude}, ${pos.coords.longitude}`; },
-                    (err) => { alert("ไม่สามารถดึงพิกัดได้"); }
-                );
-            }
-        }
-
-        function initDashboard() {
-             if (mapInitialized) return;
-             try {
-                // อ.เชียงคาน จ.เลย (อ้างอิงจากบริบทของพื้นที่)
-                const map = L.map('map').setView([17.89, 101.65], 11);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-                L.marker([17.89, 101.65]).addTo(map).bindPopup("<b>จุดเกิดเหตุหลัก</b><br>อ.เชียงคาน").openPopup();
-                setTimeout(() => { map.invalidateSize(); }, 300);
-            } catch(e) { }
-
-            try {
-                const ctx = document.getElementById('triageChart').getContext('2d');
-                window.myTriageChart = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: ['สัปดาห์ที่ 1', 'สัปดาห์ที่ 2', 'สัปดาห์ที่ 3', 'ปัจจุบัน'],
-                        datasets: [
-                            { label: 'แดง (วิกฤต)', data: [2, 5, 8, 12], backgroundColor: '#ef4444' },
-                            { label: 'ส้ม (เสี่ยงสูง)', data: [1, 3, 5, 8], backgroundColor: '#f97316' },
-                            { label: 'เหลือง (เสี่ยง)', data: [10, 20, 35, 45], backgroundColor: '#eab308' },
-                            { label: 'เขียว (เฝ้าระวัง)', data: [20, 50, 80, 102], backgroundColor: '#22c55e' }
-                        ]
-                    },
-                    options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } }
-                });
-            } catch(e) { }
-            mapInitialized = true;
-        }
-
-        // --- Operations Console Logic ---
+        // --- 6. OPERATIONS & TRIAGE LOGIC ---
         function renderPatientTable(filterText = "") {
             const tbody = document.getElementById('patient-table-body');
             tbody.innerHTML = ''; 
             const lowerFilter = filterText.toLowerCase();
-            const filtered = mockPatients.filter(p => 
+            
+            const filtered = globalPatients.filter(p => 
                 p.cid.includes(lowerFilter) || p.name.toLowerCase().includes(lowerFilter) || 
-                p.location.toLowerCase().includes(lowerFilter) || p.gender.includes(lowerFilter)
+                p.location.toLowerCase().includes(lowerFilter) || p.gender.includes(lowerFilter) ||
+                p.triage.includes(lowerFilter) || (`Type ${p.mcatt}`).toLowerCase().includes(lowerFilter)
             );
 
             if(filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-6 text-center text-gray-500 font-bold bg-gray-50 border-b border-gray-200">ไม่พบข้อมูลเคสที่ค้นหา</td></tr>`; return;
+                tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-6 text-center text-gray-500 font-bold bg-gray-50 border-b border-gray-200">ยังไม่มีข้อมูลในระบบ หรือไม่พบเคสที่ค้นหา</td></tr>`; return;
             }
 
-            filtered.forEach(p => {
-                let badgeColor = p.triage === 'แดง' ? 'bg-red-100 text-red-800' : (p.triage === 'ส้ม' ? 'bg-orange-100 text-orange-800' : (p.triage === 'เหลือง' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'));
+            // Reverse เพื่อให้คนล่าสุดอยู่บน
+            [...filtered].reverse().forEach(p => {
+                let badgeColor = p.triage === 'แดง' ? 'bg-red-100 text-red-800' : (p.triage === 'ส้ม' ? 'bg-orange-100 text-orange-800' : (p.triage === 'เหลือง' ? 'bg-yellow-100 text-yellow-800' : (p.triage === 'เขียว' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600')));
                 tbody.innerHTML += `
                     <tr class="bg-white border-b hover:bg-yellow-50 transition">
                         <td class="px-4 py-4 font-bold text-gray-900">${p.cid}</td>
@@ -660,7 +599,7 @@
         function filterPatients() { renderPatientTable(document.getElementById('universal-search').value); }
 
         function selectPatient(cid) {
-            const patient = mockPatients.find(p => p.cid === cid);
+            const patient = globalPatients.find(p => p.cid === cid);
             if(!patient) return;
             document.getElementById('op-list-container').classList.add('hidden');
             document.getElementById('op-detail-container').classList.remove('hidden');
@@ -668,18 +607,17 @@
             document.getElementById('detail-cid').innerText = `CID: ${patient.cid} | MCATT: Type ${patient.mcatt} | เพศ: ${patient.gender} | พิกัด: ${patient.location}`;
             document.getElementById('form-cid').value = patient.cid;
 
-            // ล้างค่า Triage
             ['a','b','c','d'].forEach(c => document.getElementById(`assess_${c}`).selectedIndex = 0);
             updateTriageLogic();
 
             const tlContainer = document.getElementById('patient-timeline');
             tlContainer.innerHTML = '';
-            patient.timeline.forEach(t => {
+            [...patient.timeline].reverse().forEach(t => { // โชว์อันล่าสุดไว้บน
                 tlContainer.innerHTML += `
-                    <div class="timeline-item relative">
-                        <p class="text-xs text-gray-500 font-bold">${t.time}</p>
-                        <p class="text-sm font-bold ${t.color}">${t.action}</p>
-                        <p class="text-xs text-gray-600">${t.detail}</p>
+                    <div class="timeline-item relative bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+                        <p class="text-xs text-gray-500 font-bold mb-1">${t.time}</p>
+                        <p class="text-sm font-black ${t.color}">${t.action}</p>
+                        <p class="text-xs text-gray-700 mt-1">${t.detail}</p>
                     </div>`;
             });
         }
@@ -715,7 +653,7 @@
                             (maxScore === 4 ? 'text-red-700' : maxScore === 3 ? 'text-orange-600' : maxScore === 2 ? 'text-yellow-600' : 'text-green-700');
         }
 
-        // --- Data Submission ---
+        // --- 7. FORM SUBMISSION (Data Entry & Sync) ---
         async function handleSubmit(event, sheetName, primaryKey) {
             event.preventDefault();
             const form = event.target;
@@ -723,42 +661,85 @@
             new FormData(form).forEach((value, key) => { dataObj[key] = value.trim(); });
             dataObj['Timestamp'] = new Date().toLocaleString('th-TH');
 
-            const payload = { action: "upsert", sheet: sheetName, primaryKey: primaryKey, data: dataObj };
-            
-            try {
-                // *** เมื่อระบบ Apps Script ของคุณพร้อม ให้ลบ /* และ */ ออกเพื่อเปิดใช้งาน API ***
-                /*
-                if(CONFIG.API_URL) {
-                    await fetch(CONFIG.API_URL, { 
-                        method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) 
-                    });
-                }
-                */
-                
-                const box = document.getElementById('alert-box');
-                document.getElementById('alert-msg').innerText = `บันทึกข้อมูลลงตาราง ${sheetName} เรียบร้อยแล้ว!`;
-                box.classList.remove('hidden');
-                setTimeout(() => box.classList.add('hidden'), 4000);
-                form.reset();
-
-                // Update Timeline (Mock)
-                if(sheetName === 'Assessments') {
-                    const tlContainer = document.getElementById('patient-timeline');
+            // --- LOCAL STATE UPDATE (เพื่อโชว์ข้อมูลสด ๆ ในระบบทันที) ---
+            if(sheetName === 'Patients') {
+                globalPatients.push({
+                    cid: dataObj.CID, name: dataObj.FullName, mcatt: dataObj.MCATT_Type, 
+                    gender: dataObj.Gender, age: dataObj.Age, location: dataObj.Location,
+                    triage: "รอประเมิน", 
+                    timeline: [{ time: dataObj.Timestamp, action: "ขึ้นทะเบียนเคสใหม่", detail: "รับเข้าสู่ระบบฐานข้อมูลกลาง", color: "text-green-600" }]
+                });
+            } else if (sheetName === 'Assessments') {
+                let p = globalPatients.find(x => x.cid === dataObj.CID);
+                if(p) {
+                    p.triage = dataObj.Overall_Triage;
                     const colorClass = dataObj.Overall_Triage === 'แดง' ? 'text-red-600' : (dataObj.Overall_Triage === 'ส้ม' ? 'text-orange-500' : (dataObj.Overall_Triage === 'เหลือง' ? 'text-yellow-600' : 'text-green-600'));
-                    const newHtml = `
-                        <div class="timeline-item relative bg-indigo-50 p-3 rounded-lg mt-2 border border-indigo-200 shadow-sm">
-                            <p class="text-xs text-indigo-500 font-bold mb-1">เมื่อสักครู่ (เพิ่มใหม่ล่าสุด)</p>
-                            <p class="text-sm font-black ${colorClass}">ประเมินและอัปเดต Triage (${dataObj.Overall_Triage})</p>
-                            <p class="text-xs text-gray-700 mt-1 font-medium">${dataObj.Phase} - ${dataObj.Action}</p>
-                            <p class="text-xs text-gray-500 mt-1"><i class="fa-solid fa-user-pen"></i> ${dataObj.Staff_Note || 'ไม่มีบันทึกเพิ่มเติม'}</p>
-                        </div>`;
-                    tlContainer.innerHTML = newHtml + tlContainer.innerHTML;
-                    updateTriageLogic(); // Reset form logic
+                    p.timeline.push({
+                        time: dataObj.Timestamp, action: `ประเมิน Triage ABCD (${dataObj.Overall_Triage})`,
+                        detail: `Phase: ${dataObj.Phase} | Action: ${dataObj.Action} <br>Note: ${dataObj.Staff_Note || '-'}`,
+                        color: colorClass
+                    });
+                    selectPatient(dataObj.CID); // Refresh Timeline บนหน้าจอ
                 }
+            }
+
+            // Save to LocalStorage for persistence during test
+            localStorage.setItem('mcatt_patients', JSON.stringify(globalPatients));
+            updateDashboardStats(); // Refresh Dashboard Real-time
+            renderPatientTable();   // Refresh Table
+
+            // --- BACKEND API SYNC ---
+            const payload = { action: "upsert", sheet: sheetName, primaryKey: primaryKey, data: dataObj };
+            try {
+                if(CONFIG.API_URL) {
+                    await fetch(CONFIG.API_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                }
+                const box = document.getElementById('alert-box');
+                document.getElementById('alert-msg').innerText = `บันทึกข้อมูล ${sheetName} สำเร็จ และอัปเดตระบบเรียบร้อย!`;
+                box.classList.remove('hidden');
+                setTimeout(() => box.classList.add('hidden'), 3500);
+                if(sheetName !== 'Assessments') form.reset();
             } catch (err) { alert("Error: " + err.message); }
         }
 
-        // --- AI RAG ---
+        // --- 8. MAP & AI SIMULATION ---
+        function getLocation(id) {
+             if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => { document.getElementById(id).value = `${pos.coords.latitude}, ${pos.coords.longitude}`; },
+                    (err) => { alert("ไม่สามารถดึงพิกัดได้"); }
+                );
+            }
+        }
+
+        function initDashboard() {
+             if (mapInitialized) return;
+             try {
+                const map = L.map('map').setView([17.89, 101.65], 11);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+                L.marker([17.89, 101.65]).addTo(map).bindPopup("<b>จุดเกิดเหตุหลัก</b><br>อ.เชียงคาน").openPopup();
+                setTimeout(() => { map.invalidateSize(); }, 300);
+            } catch(e) { }
+
+            try {
+                const ctx = document.getElementById('triageChart').getContext('2d');
+                window.myTriageChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['สัปดาห์ที่ 1', 'สัปดาห์ที่ 2', 'สัปดาห์ที่ 3', 'ปัจจุบัน'],
+                        datasets: [
+                            { label: 'แดง (วิกฤต)', data: [2, 5, 8, 12], backgroundColor: '#ef4444' },
+                            { label: 'ส้ม (เสี่ยงสูง)', data: [1, 3, 5, 8], backgroundColor: '#f97316' },
+                            { label: 'เหลือง (เสี่ยง)', data: [10, 20, 35, 45], backgroundColor: '#eab308' },
+                            { label: 'เขียว (เฝ้าระวัง)', data: [20, 50, 80, 102], backgroundColor: '#22c55e' }
+                        ]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } }
+                });
+            } catch(e) { }
+            mapInitialized = true;
+        }
+
         function simulateAI() {
             const input = document.getElementById('ai-input').value;
             if(!input) return;
